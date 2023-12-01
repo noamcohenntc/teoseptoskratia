@@ -9,9 +9,15 @@ const port = 8080;
 const ownerAddress = "BLOCK OWNER";//uuid().split("-").join("");
 const timecoin = new Blockchain(ownerAddress);
 
+app.set('views', './src/views')
+app.set('view engine', 'pug')
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 
+app.get("/",(req,res)=>{
+    res.render('index', { title: 'Hey', message: 'Hello there!' })
+})
 app.get("/blockchain",(req,res)=>{
     res.send(timecoin);
 })

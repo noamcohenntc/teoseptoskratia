@@ -1,16 +1,14 @@
 const sha256 = require("sha256");
+const uuid = require('uuid').v4;
 class Blockchain{
-    constructor(ownerAddress) {
-        this.ownerAddress = ownerAddress;
+    constructor(name, ownerAddress) {
         this.chain = [];
-        this.pendingTransactions = [];
         // Genesis Block
-        this.createNewBlock({nonce: 0,duration:0});
+        this.createNewBlock({nonce: 0,duration:0},[],{name, ownerAddress});
     }
-    createNewBlock(nonce){
-        const newBlock = new Block(this,nonce);
+    createNewBlock(nonce,transactions,data){
+        const newBlock = new Block(this,transactions,nonce,data||{});
 
-        this.pendingTransactions = [];
         this.chain.push(newBlock);
 
         return newBlock;
@@ -20,13 +18,17 @@ class Blockchain{
     }
 
     createNewTransactions(transactions){
-        this.pendingTransactions = transactions;
-
         let nonce = this.proofOfWork()
-        this.createNewBlock(nonce);
+        this.createNewBlock(nonce,transactions);
         return this.getLastBlock().index;
     }
     validate(){
+        for(let i=1;i<this.chain.length;i++){
+            var block = this.chain[i];
+            var prevBlock = this.chain[i-1];
+            if(block.previousBlockHash!==prevBlock.hash)
+                return false;
+        }
         this.chain.forEach((block)=>{
             if(!block.validate())
                 return false;
@@ -48,16 +50,17 @@ class Blockchain{
 
     mine(amount){
         this.createNewTransactions([
-            new Transaction(amount,"00",this.ownerAddress)
+            new Transaction(amount,"00",this.chain[0].data.ownerAddress)
         ]);
     }
 }
 
 class Block{
-    constructor(blockchain,nonce) {
+    constructor(blockchain, transactions, nonce, data) {
         this.index = blockchain.chain.length+1;
         this.timestamp = Date.now();
-        this.transactions = blockchain.pendingTransactions;
+        this.data = data;
+        this.transactions = transactions;
         this.nonce = nonce;
         this.hash = "";
 

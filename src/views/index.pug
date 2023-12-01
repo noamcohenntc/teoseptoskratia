@@ -1,5 +1,13 @@
 html
-    head
-        title= title
+    include includes/head
     body
-        h1= message
+        header
+            h1 Welcome!
+            img(id="logo", src="/img/logo.png")
+        main
+            p Own your private financial system including a cryptographic coin, bank and exchange
+            h3 Get Started!
+            input(id="coin_name")
+            button(id="create_coin_btn") Create Coin
+        footer
+            include includes/footer

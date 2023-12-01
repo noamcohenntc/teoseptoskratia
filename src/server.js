@@ -7,8 +7,7 @@ const uuid = require('uuid').v4;
 
 const port = 8080;
 const ownerAddress = "BLOCK OWNER";//uuid().split("-").join("");
-
-const timecoin = new Blockchain();
+const timecoin = new Blockchain(ownerAddress);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
@@ -17,17 +16,13 @@ app.get("/blockchain",(req,res)=>{
     res.send(timecoin);
 })
 
-app.post("/transaction",(req,res)=>{
-    const blockIndex = timecoin.createNewTransactions([
-        new Transaction(req.body.amount,req.body.sender,req.body.recipient)
-    ]);
+app.post("/transactions",(req,res)=>{
+    const blockIndex = timecoin.createNewTransactions(req.body.transactions);
     res.json({note: `Transaction created in block: ${blockIndex}`})
 })
 
 app.post("/mine",(req,res)=>{
-    timecoin.createNewTransactions([
-        new Transaction(req.body.amount,"00",ownerAddress)
-    ]);
+    timecoin.mine(req.body.amount);
 
     res.json({
         note:`New block created with: ${req.body.amount}`,

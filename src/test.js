@@ -1,14 +1,11 @@
 const util = require('util')
 const {Blockchain, Transaction} = require("./blockchain");
-const timecoin =  new Blockchain();
+const timecoin =  new Blockchain("Noam");
 
+timecoin.mine(10);
 timecoin.createNewTransactions([
-    new Transaction(10,"Noam","Tom"),
-    new Transaction(10,"Tom","Dr. Who")
-]);
-
-timecoin.createNewTransactions([
-    new Transaction(10,"Dr. Who","Devil")
+    new Transaction(10,"Noam","Devil")
 ]);
 
 console.log(util.inspect(timecoin, false, null, true))
+console.log("Is valid:",timecoin.validate());

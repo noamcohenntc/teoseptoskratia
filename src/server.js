@@ -3,10 +3,13 @@ const app = express();
 const bodyParser = require("body-parser");
 const {Blockchain,Transaction} = require("./blockchain");
 const {request} = require("express");
-const uuid = require('uuid').v4;
-
+const uuid = require('uuid').v5;
+const MY_NAMESPACE = '9b561c64-41d5-221a-77b3-br05as1f7128';
 const port = 8080;
-const coins = {};
+const blockChains = {};
+const URL = "https://labourcoin.com/";
+
+blockChains["i"] = new Blockchain("name",uuid(URL,uuid.URL).split("-").join(""));
 
 app.set('views', './src/views')
 app.set('view engine', 'pug')
@@ -19,32 +22,68 @@ app.get("/",(req,res)=>{
     res.render('index', { title: 'Hey', message: 'Hello there!' })
 })
 app.get("/:coinname/home",(req,res)=>{
-    const coinName = req.params.coinname;
-    if(!coins[coinName]) {
-        const ownerAddress = uuid().split("-").join("");
-        coins[coinName] = new Blockchain(coinName, ownerAddress);
+    let account = req.params.coinname;
+    let renderOptions = {};
+    // Is this a client of the business?
+    if(account.indexOf('@')!==-1){
+        let blockchainName = account.split("@")[1];
+        let clientBankAddress = blockChains[account.split("@")[0]].getCoinOwnerAddress();
+
+        const coinsInEco = blockChains[blockchainName].coinsInEco();
+        const coinsInWallet = blockChains[blockchainName].coinsInWallet(clientBankAddress);
+
+        renderOptions = {
+            coinName:account,
+            ownerAddress:clientBankAddress,
+            coinsInEco,
+            coinsInWallet
+        }
     }
-    const ownerAddress = coins[coinName].ownerAddress;
-    res.render('home', {coinName, ownerAddress})
+    else{ // This is the business!
+        let blockchainName = account;
+        if(!blockChains[blockchainName]) {
+            const ownerAddress = uuid(req.protocol + '://' + req.get('host') + req.originalUrl, uuid.URL).split("-").join("");
+            blockChains[blockchainName] = new Blockchain(blockchainName, ownerAddress);
+        }
+        const ownerAddress = blockChains[blockchainName].getCoinOwnerAddress();
+        const coinsInEco = blockChains[blockchainName].coinsInEco();
+        const coinsInWallet = blockChains[blockchainName].coinsInWallet();
+
+        renderOptions = {
+            coinName:blockchainName,
+            ownerAddress,
+            coinsInEco,
+            coinsInWallet,
+            canMine:true
+        }
+    }
+    res.render('home', renderOptions)
+
+})
+
+app.get("/:bankAccount/bank",(req,res)=>{
+
 })
 /*******/
 /* API */
 /*******/
 app.get("/:coinname/blockchain",(req,res)=>{
-    res.send(timecoin);
+    res.send(blockChains[req.params.coinname]);
 })
 
 app.post("/:coinname/transactions",(req,res)=>{
-    const blockIndex = timecoin.createNewTransactions(req.body.transactions);
+    const blockIndex = blockChains[req.params.coinname].createNewTransactions(req.body.transactions);
     res.json({note: `Transaction created in block: ${blockIndex}`})
 })
 
 app.post("/:coinname/mine",(req,res)=>{
-    timecoin.mine(req.body.amount);
+    blockChains[req.params.coinname].mine(parseFloat(req.body.amount),blockChains["i"].getCoinOwnerAddress());
 
     res.json({
         note:`New block created with: ${req.body.amount}`,
-        nonce:timecoin.getLastBlock().nonce
+        nonce:blockChains[req.params.coinname].getLastBlock().nonce,
+        coinsInEco:blockChains[req.params.coinname].coinsInEco(),
+        coinsInWallet:blockChains[req.params.coinname].coinsInWallet()
     });
 })
 

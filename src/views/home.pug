@@ -6,5 +6,17 @@ html
         main
             h3= coinName
             div= ownerAddress
+            br
+            div
+                span Coins in Eco:
+                span(id="coins_in_eco")= coinsInEco
+            div
+                span Coins in Wallet:
+                span(id="coins_in_wallet")= coinsInWallet
+            if canMine
+                div
+                    input(id="coins_to_mine", value="100")
+                    button(id="mine_btn") Mine
+                    span(id="time_ms")
         footer
             include includes/footer

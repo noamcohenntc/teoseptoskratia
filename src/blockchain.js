@@ -1,11 +1,38 @@
 const sha256 = require("sha256");
-const uuid = require('uuid').v4;
+
 class Blockchain{
     constructor(name, ownerAddress) {
         this.chain = [];
         // Genesis Block
         this.createNewBlock({nonce: 0,duration:0},[],{name, ownerAddress});
     }
+
+    coinsInEco(){
+        let coinCnt = 0;
+        this.chain.forEach((block)=>{
+            block.transactions.forEach((transaction)=>{
+                if(transaction.from==="00")
+                    coinCnt+=transaction.amount;
+            })
+        });
+        return coinCnt;
+    }
+
+    coinsInWallet(address){
+        let coinCnt = 0;
+        address = address||this.getCoinOwnerAddress();
+
+        this.chain.forEach((block)=>{
+            block.transactions.forEach((transaction)=>{
+                if(transaction.from===address)
+                    coinCnt-=transaction.amount;
+                else if(transaction.to===address)
+                    coinCnt+=transaction.amount;
+            })
+        });
+        return coinCnt;
+    }
+
     createNewBlock(nonce,transactions,data){
         const newBlock = new Block(this,transactions,nonce,data||{});
 
@@ -20,7 +47,7 @@ class Blockchain{
     createNewTransactions(transactions){
         let nonce = this.proofOfWork()
         this.createNewBlock(nonce,transactions);
-        return this.getLastBlock().index;
+        return nonce;
     }
     validate(){
         for(let i=1;i<this.chain.length;i++){
@@ -48,9 +75,16 @@ class Blockchain{
         return {nonce,duration};
     }
 
-    mine(amount){
+    getCoinOwnerAddress(){
+        return this.chain[0].data.ownerAddress;
+    }
+
+    mine(amount,feeAddress){
+        const nonce = this.createNewTransactions([
+            new Transaction(amount,"00",this.getCoinOwnerAddress())
+        ]);
         this.createNewTransactions([
-            new Transaction(amount,"00",this.chain[0].data.ownerAddress)
+            new Transaction((nonce.duration/100000)*amount,this.getCoinOwnerAddress(), feeAddress)
         ]);
     }
 }

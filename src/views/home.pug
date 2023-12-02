@@ -4,23 +4,30 @@ html
         header
             include includes/logo_small
         main
-            h2= coinName
-            div Multichain Bank Number (MBN):
+            h1= coinName
+
+            div Multichain Wallet Address (MWA):
                 b= ownerAddress
+            p
+                a(href="blockchain") view blockchain
+                span &nbsp;(down&nbsp;
+                a(target="_blank" href="https://chromewebstore.google.com/detail/bcjindcccaagfpapjjmafapmmgkkhgoa") JSON Formatter
+                span &nbsp;chrome extension)
+
             br
             div
                 span Coins in Ecosystem:
                 span(id="coins_in_eco")= coinsInEco
-            div
-                span Coins in Bank:
-                span(id="coins_in_wallet")= coinsInWallet
+            //div
+            //    span Coins in Bank:
+            //    span(id="coins_in_wallet")= coinsInWallet
             if canMine
                 div
                     input(id="coins_to_mine", value="100")
                     button(id="mine_btn") Mine
                     span(id="time_ms")
             div(id="bank")
-                h3 Bank Accounts
+                h3 Multichains
                 table
                     tr
                         td Client

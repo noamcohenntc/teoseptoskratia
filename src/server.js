@@ -9,8 +9,7 @@ const {add} = require("nodemon/lib/rules");
 const DB = require("./db");
 const uuid = require('uuid').v5;
 const port = 8080;
-const multichain = {};
-let getNameSpace;
+let multichain = {};
 
 app.set('views', './src/views')
 app.set('view engine', 'pug')
@@ -20,25 +19,19 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 
 app.use((req,res,next)=>{
-    if(!getNameSpace) {
-        getNameSpace = () => {
-            return req.get('host')
-        }
-    }
-
     if(!multichain["i"]){
-        const address = uuid(req.protocol + '://' + getNameSpace(), uuid.URL).split("-").join("");
-        multichain["i"] = new Blockchain("i",address,getNameSpace());
+        const address = uuid(req.protocol + '://' + req.get('host'), uuid.URL).split("-").join("");
+        multichain["i"] = new Blockchain("i",address,req.get('host'));
         multichain["i"].init((valid)=>{
             if(!valid)
                 throw new Error("Chain i, invalid.");
 
-            let db = new DB(null,getNameSpace());
+            let db = new DB(null,req.get('host'));
             db.getAllChainNames((names)=>{
                 names.forEach((name)=>{
                     if(name==="i")return;
 
-                    multichain[name] = new Blockchain(name,null,getNameSpace());
+                    multichain[name] = new Blockchain(name,null,req.get('host'));
                     multichain[name].init((valid)=>{
                         if(!valid)
                             throw new Error(`Chain ${name}, invalid.`);
@@ -74,6 +67,13 @@ function getBankAccountsDetails(blockchainName,revers) {
 app.get("/:coinname/home",(req,res)=>{
     let account = req.params.coinname;
 
+    if(account.split('@').length>2 ||
+        account.indexOf(":")!==-1 ||
+        !multichain[account.split("@")[0]] ||
+        (account.split('@').length===2 && !multichain[account.split("@")[1]])){
+        return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\" or \":\""})
+    }
+
     // Is this a client of the business?
     if(account.indexOf('@')!==-1){
         let blockchainName = account.split("@")[1];
@@ -95,8 +95,8 @@ app.get("/:coinname/home",(req,res)=>{
     // This is the business!
     let blockchainName = account;
     if(!multichain[blockchainName]) {
-        const ownerAddress = uuid(req.protocol + '://' + getNameSpace() + req.originalUrl, uuid.URL).split("-").join("");
-        multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,getNameSpace());
+        const ownerAddress = uuid(req.protocol + '://' + req.get('host') + req.originalUrl, uuid.URL).split("-").join("");
+        multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,req.get('host'));
         multichain[blockchainName].init((valid)=>{
             if(!valid)
                 throw new Error("Blockchain: " + blockchainName +", invalid");

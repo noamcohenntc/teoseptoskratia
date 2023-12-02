@@ -16,8 +16,8 @@ html
 
             br
             div
-                span Coins in Ecosystem:
-                span(id="coins_in_eco")= coinsInEco
+                //span Coins in Ecosystem:
+                //span(id="coins_in_eco")= coinsInEco
             //div
             //    span Coins in Bank:
             //    span(id="coins_in_wallet")= coinsInWallet
@@ -27,13 +27,13 @@ html
                     button(id="mine_btn") Mine
                     span(id="time_ms")
             div(id="bank")
-                h3 Multichains
+                h3 Multichain
                 table
                     tr
-                        td Client
+                        td Blockchain
                         td Total
                         td Transfer
-                        td Client Home Page
+                        td Chainlink
                     each account in accounts
                         tr
                             td

@@ -88,6 +88,10 @@ class Blockchain{
         return this.gensis.data.address;
     }
 
+    getOwnerName(){
+        return this.gensis.data.name;
+    }
+
     mine(amount,feeAddress){
         const newBlock = this.createNewTransactionsWithProof([
             new Transaction(amount,"00",this.getCoinOwnerAddress())

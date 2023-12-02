@@ -4,7 +4,7 @@ html
         header
             include includes/logo_small
         main
-            h3= coinName
+            h2= coinName
             div= ownerAddress
             br
             div
@@ -18,5 +18,9 @@ html
                     input(id="coins_to_mine", value="100")
                     button(id="mine_btn") Mine
                     span(id="time_ms")
+                div(id="bank")
+                    h3 Bank
+                    each account in accounts
+                        div(id=("account_"+account.name.replace("@","-")))= account.name +": " + account.coins
         footer
             include includes/footer

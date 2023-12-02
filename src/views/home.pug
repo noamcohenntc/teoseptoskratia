@@ -15,16 +15,15 @@ html
                 span &nbsp;chrome extension)
 
             br
-            div
-                //span Coins in Ecosystem:
-                //span(id="coins_in_eco")= coinsInEco
-            //div
-            //    span Coins in Bank:
-            //    span(id="coins_in_wallet")= coinsInWallet
+            p
+                span Total Coins Mined:&nbsp
+                span(id="coins_in_eco")= coinsInEco
+
             if canMine
                 div
                     input(id="coins_to_mine", value="100")
                     button(id="mine_btn") Mine
+                    |
                     span(id="time_ms")
             div(id="bank")
                 h3 Multichain

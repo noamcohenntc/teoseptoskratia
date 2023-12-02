@@ -67,11 +67,11 @@ function getBankAccountsDetails(blockchainName,revers) {
 app.get("/:coinname/home",(req,res)=>{
     let account = req.params.coinname;
 
-    if(account.split('@').length>2 ||
+    if(account==="i" ||
+        account.split('@').length>2 ||
         account.indexOf(":")!==-1 ||
-        !multichain[account.split("@")[0]] ||
-        (account.split('@').length===2 && !multichain[account.split("@")[1]])){
-        return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\" or \":\""})
+        (account.split('@').length===2 && (!multichain[account.split("@")[0]] || !multichain[account.split("@")[1]]))){
+        return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\" or \":\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage."})
     }
 
     // Is this a client of the business?

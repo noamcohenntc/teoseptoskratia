@@ -17,19 +17,21 @@ class DB{
         }
     }
     saveChain(chain,cb){
-        fs.writeFileSync(this.path ,JSON.stringify(chain))
-        cb();
+        fs.writeFile(this.path ,JSON.stringify(chain),cb)
     }
     loadChain(cb){
         if(!fs.existsSync(this.path))
             return cb(null);
 
-        const chain = JSON.parse(fs.readFileSync(this.path,"utf8"))
-        cb(chain);
+        fs.readFile(this.path,"utf8",(err,data)=>{
+            const chain = JSON.parse(data);
+            cb(chain);
+        })
     }
-    getAllChainNames(cb){
-        var chainNames = fs.readdirSync(this.namespace);
-        cb(chainNames);
+    getAllChainNames(cb){ 
+        fs.readdir(this.namespace,(err, files)=>{
+            cb(files);
+        });
     }
 }
 

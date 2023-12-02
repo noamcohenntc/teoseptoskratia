@@ -2,11 +2,16 @@ const sha256 = require("sha256");
 
 class Blockchain{
     constructor(name, ownerAddress) {
+        this.name = name;
+        this.address = ownerAddress;
         this.chain = [];
-        // Genesis Block
-        this.createNewBlock({nonce: 0,duration:0},[],{name, ownerAddress});
-    }
+        this.zeroNonce = {nonce: 0,duration:0};
+     }
 
+    init(){
+        // Genesis Block
+        this.gensis = this.createNewBlock(this.zeroNonce,[],{name:this.name, address:this.address});
+    }
     coinsInEco(){
         let coinCnt = 0;
         this.chain.forEach((block)=>{
@@ -38,16 +43,20 @@ class Blockchain{
 
         this.chain.push(newBlock);
 
+        this.lastBlock = newBlock;
         return newBlock;
     }
-    getLastBlock(){
-        return this.chain[this.chain.length-1];
-    }
 
+    createNewTransactionsWithProof(transactions){
+        let nonce =  this.proofOfWork();
+        return this.createNewBlock(nonce,transactions);
+    }
     createNewTransactions(transactions){
-        let nonce = this.proofOfWork()
-        this.createNewBlock(nonce,transactions);
-        return nonce;
+        let start = process.cpuUsage().user;
+        let nonce =  this.zeroNonce;
+        let newBlock = this.createNewBlock(nonce,transactions);
+        newBlock.nonce.duration = process.cpuUsage().user-start;
+        return newBlock;
     }
     validate(){
         for(let i=1;i<this.chain.length;i++){
@@ -63,29 +72,32 @@ class Blockchain{
         return true;
     }
     proofOfWork(){
-        const start = Date.now();
+        const start = process.cpuUsage().user;
         let nonce = 0;
-        let lastBlock = this.getLastBlock();
+        let lastBlock = this.lastBlock;
         let hash = lastBlock.hashBlock(nonce);
         while(hash.substring(0,4) !== "0000"){
             nonce++;
             hash = lastBlock.hashBlock(nonce);
         }
-        const duration = Date.now()-start;
+        const duration = process.cpuUsage().user;
         return {nonce,duration};
     }
 
     getCoinOwnerAddress(){
-        return this.chain[0].data.ownerAddress;
+        return this.gensis.data.address;
     }
 
     mine(amount,feeAddress){
-        const nonce = this.createNewTransactions([
+        const newBlock = this.createNewTransactionsWithProof([
             new Transaction(amount,"00",this.getCoinOwnerAddress())
         ]);
+
+        // fee transaction
         this.createNewTransactions([
-            new Transaction((nonce.duration/100000)*amount,this.getCoinOwnerAddress(), feeAddress)
+            new Transaction((newBlock.nonce.duration/100000000)*amount,this.getCoinOwnerAddress(), feeAddress)
         ]);
+        return newBlock.nonce;
     }
 }
 

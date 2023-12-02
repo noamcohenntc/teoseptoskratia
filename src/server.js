@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const {Blockchain,Transaction} = require("./blockchain");
 const {request} = require("express");
+const { prettyPrintJson } = require('pretty-print-json');
 const uuid = require('uuid').v5;
 const MY_NAMESPACE = '9b561c64-41d5-221a-77b3-br05as1f7128';
 const port = 8080;
@@ -10,6 +11,7 @@ const blockChains = {};
 const URL = "https://labourcoin.com/";
 
 blockChains["i"] = new Blockchain("name",uuid(URL,uuid.URL).split("-").join(""));
+blockChains["i"].init();
 
 app.set('views', './src/views')
 app.set('view engine', 'pug')
@@ -44,6 +46,7 @@ app.get("/:coinname/home",(req,res)=>{
         if(!blockChains[blockchainName]) {
             const ownerAddress = uuid(req.protocol + '://' + req.get('host') + req.originalUrl, uuid.URL).split("-").join("");
             blockChains[blockchainName] = new Blockchain(blockchainName, ownerAddress);
+            blockChains[blockchainName].init();
         }
         const ownerAddress = blockChains[blockchainName].getCoinOwnerAddress();
         const coinsInEco = blockChains[blockchainName].coinsInEco();
@@ -61,14 +64,11 @@ app.get("/:coinname/home",(req,res)=>{
 
 })
 
-app.get("/:bankAccount/bank",(req,res)=>{
-
-})
 /*******/
 /* API */
 /*******/
 app.get("/:coinname/blockchain",(req,res)=>{
-    res.send(blockChains[req.params.coinname]);
+    res.send(blockChains[req.params.coinname].chain);
 })
 
 app.post("/:coinname/transactions",(req,res)=>{
@@ -77,11 +77,11 @@ app.post("/:coinname/transactions",(req,res)=>{
 })
 
 app.post("/:coinname/mine",(req,res)=>{
-    blockChains[req.params.coinname].mine(parseFloat(req.body.amount),blockChains["i"].getCoinOwnerAddress());
+    let nonce = blockChains[req.params.coinname].mine(parseFloat(req.body.amount),blockChains["i"].getCoinOwnerAddress());
 
     res.json({
         note:`New block created with: ${req.body.amount}`,
-        nonce:blockChains[req.params.coinname].getLastBlock().nonce,
+        nonce,
         coinsInEco:blockChains[req.params.coinname].coinsInEco(),
         coinsInWallet:blockChains[req.params.coinname].coinsInWallet()
     });

@@ -7,6 +7,6 @@ $("#mine_btn").on("click",()=>{
     },(res)=>{
         $("#coins_in_eco").html(res.coinsInEco);
         $("#coins_in_wallet").html(res.coinsInWallet);
-        $("#time_ms").html(res.nonce.duration + "ms");
+        $("#time_ms").html(res.nonce.duration + "mis");
     })
 })

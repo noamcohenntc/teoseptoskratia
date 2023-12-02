@@ -1,16 +1,37 @@
 const sha256 = require("sha256");
+const DB = require("./db");
 
 class Blockchain{
-    constructor(name, ownerAddress) {
+    constructor(name, ownerAddress,namespace) {
         this.name = name;
         this.address = ownerAddress;
+        this.namespace = namespace;
         this.chain = [];
         this.zeroNonce = {nonce: 0,duration:0};
+        this.db = new DB(this.name,namespace);
      }
 
-    init(){
-        // Genesis Block
-        this.gensis = this.createNewBlock(this.zeroNonce,[],{name:this.name, address:this.address});
+    init(cb){
+        this.db.loadChain((chain)=>{
+            if(!chain) {
+                this.createNewBlock(this.zeroNonce, [],
+                    {name: this.name,
+                        address: this.address,
+                        namespace:this.namespace
+                    });
+            } else {
+                this.name = chain[0].data.name;
+                this.address = chain[0].data.address;
+                this.namespace = chain[0].data.namespace;
+
+                chain.forEach((block)=>{
+                    const b = new Block(this, block.transactions,block.nonce,block.data,block.hash)
+                    this.chain.push(b);
+                })
+            }
+            let valid = this.validate();
+            cb(valid);
+        })
     }
     coinsInEco(){
         let coinCnt = 0;
@@ -44,6 +65,7 @@ class Blockchain{
         this.chain.push(newBlock);
 
         this.lastBlock = newBlock;
+        this.db.saveChain(this.chain,()=>{});
         return newBlock;
     }
 
@@ -51,11 +73,27 @@ class Blockchain{
         let nonce =  this.proofOfWork();
         return this.createNewBlock(nonce,transactions);
     }
-    createNewTransactions(transactions){
+    createNewTransactions(transactions,rewardAddress){
         let start = process.cpuUsage().user;
         let nonce =  this.zeroNonce;
         let newBlock = this.createNewBlock(nonce,transactions);
         newBlock.nonce.duration = process.cpuUsage().user-start;
+
+        if(rewardAddress) {
+            let totalAmount = 0;
+            let tos = [];
+            transactions.forEach((transaction) => {
+                totalAmount += transaction.amount;
+                tos.push(transaction.to);
+            })
+            let reward = (newBlock.nonce.duration / 100000000) * totalAmount;
+            let rewardTransactions = [];
+            tos.forEach((to) => {
+                rewardTransactions.push(new Transaction(reward/transactions.length,to,rewardAddress));
+            })
+            this.createNewTransactions(rewardTransactions);
+        }
+
         return newBlock;
     }
     validate(){
@@ -71,10 +109,14 @@ class Blockchain{
         })
         return true;
     }
+
+    getLastBlock(){
+        return this.chain[this.chain.length-1];
+    }
     proofOfWork(){
         const start = process.cpuUsage().user;
         let nonce = 0;
-        let lastBlock = this.lastBlock;
+        let lastBlock = this.getLastBlock();
         let hash = lastBlock.hashBlock(nonce);
         while(hash.substring(0,4) !== "0000"){
             nonce++;
@@ -85,11 +127,11 @@ class Blockchain{
     }
 
     getCoinOwnerAddress(){
-        return this.gensis.data.address;
+        return this.chain[0].data.address;
     }
 
     getOwnerName(){
-        return this.gensis.data.name;
+        return this.chain[0].data.name;
     }
 
     mine(amount,feeAddress){
@@ -106,7 +148,7 @@ class Blockchain{
 }
 
 class Block{
-    constructor(blockchain, transactions, nonce, data) {
+    constructor(blockchain, transactions, nonce, data, hash) {
         this.index = blockchain.chain.length+1;
         this.timestamp = Date.now();
         this.data = data;
@@ -121,7 +163,7 @@ class Block{
             prevHash = blockchain.chain[blockchain.chain.length-1].hash;
         this.previousBlockHash = prevHash
 
-        this.hash = this.hashBlock();
+        this.hash = hash||this.hashBlock();
     }
     hashBlock(nonce){
         return sha256(JSON.stringify(nonce||this.nonce) + JSON.stringify(this));

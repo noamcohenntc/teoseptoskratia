@@ -67,11 +67,18 @@ function getBankAccountsDetails(blockchainName,revers) {
 app.get("/:coinname/home",(req,res)=>{
     let account = req.params.coinname;
 
+    if(req.query.new && multichain[account])
+        return res.render("error",{error:"This blockchain name is already taken."})
+    else if(req.query.new)
+        return res.redirect(req.originalUrl.split("?")[0]);
+
     if(account==="i" ||
+        account==="?" ||
+        account==="" ||
         account.split('@').length>2 ||
         account.indexOf(":")!==-1 ||
         (account.split('@').length===2 && (!multichain[account.split("@")[0]] || !multichain[account.split("@")[1]]))){
-        return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\" or \":\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage."})
+        return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\", \":\" or \"?\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage."})
     }
 
     // Is this a client of the business?
@@ -95,7 +102,7 @@ app.get("/:coinname/home",(req,res)=>{
     // This is the business!
     let blockchainName = account;
     if(!multichain[blockchainName]) {
-        const ownerAddress = uuid(req.protocol + '://' + req.get('host') + req.originalUrl, uuid.URL).split("-").join("");
+        const ownerAddress = uuid(req.protocol + '://' + req.get('host') + req.originalUrl.split("?")[0], uuid.URL).split("-").join("");
         multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,req.get('host'));
         multichain[blockchainName].init((valid)=>{
             if(!valid)

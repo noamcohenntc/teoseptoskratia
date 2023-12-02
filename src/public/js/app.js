@@ -1,6 +1,12 @@
 $("#create_coin_btn").on("click",()=>{
-    document.location = "/" + $("#coin_name").val() + "/home";
-})
+    if($("#coin_name").val() !== "")
+        document.location = "/" + $("#coin_name").val() + "/home?new=true";
+});
+$("#login").on("click",()=>{
+    if($("#coin_name").val() !== "")
+        document.location = "/" + $("#coin_name").val() + "/home";
+});
+
 $("#mine_btn").on("click",()=>{
     $.post("mine",{
         amount:parseFloat($("#coins_to_mine").val())

@@ -3,7 +3,7 @@ class DB{
     constructor(blockchainName,namespace) {
         if(!fs.existsSync(process.cwd() + "/DB"))
             fs.mkdirSync(process.cwd() + "/DB");
-        
+
         namespace = namespace.replace(":","");
         this.namespace = process.cwd() + "/DB/"+namespace;
         this.path = this.namespace;

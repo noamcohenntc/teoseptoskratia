@@ -170,6 +170,11 @@ class Block{
     }
 
     validate(){
+        /*
+        You have to remove the hash before re-hashing
+        since when the block is created it is hash without a hash
+        which is assigned after the hashing.
+         */
         let temp = this.hash;
         this.hash = "";
         let isValid = this.hashBlock()===temp;

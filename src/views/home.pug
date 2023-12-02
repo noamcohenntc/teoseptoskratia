@@ -5,22 +5,40 @@ html
             include includes/logo_small
         main
             h2= coinName
-            div= ownerAddress
+            div Multichain Bank Number (MBN):
+                b= ownerAddress
             br
             div
-                span Coins in Eco:
+                span Coins in Ecosystem:
                 span(id="coins_in_eco")= coinsInEco
             div
-                span Coins in Wallet:
+                span Coins in Bank:
                 span(id="coins_in_wallet")= coinsInWallet
             if canMine
                 div
                     input(id="coins_to_mine", value="100")
                     button(id="mine_btn") Mine
                     span(id="time_ms")
-                div(id="bank")
-                    h3 Bank
+            div(id="bank")
+                h3 Bank Accounts
+                table
+                    tr
+                        td Client
+                        td Total
+                        td Transfer
+                        td Client Home Page
                     each account in accounts
-                        div(id=("account_"+account.name.replace("@","-")))= account.name +": " + account.coins
+                        tr
+                            td
+                                span= account.name
+                            td
+                                span(id=("account_"+account.name.replace("@","-")))= account.coins
+                            td
+                                input(id=("input_"+account.name.replace("@","-")))
+                            td
+                                a(href="/" + account.home + "/home")= "/" + account.home + "/home"
+                    tr
+                        td(colspan="4")
+                            button(id="transfer_btn") Transfer
         footer
             include includes/footer

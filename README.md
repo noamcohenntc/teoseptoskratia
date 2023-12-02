@@ -1,6 +1,8 @@
 ```
 npm install
 npm start
+
+http://localhost:8080/
 ```
 
 # Theoseaftoscracy - A Civil Federation
@@ -16,16 +18,3 @@ npm start
 ### And the entity can be a virtual entity such as a government or a collective of several concrete entities - human beings.
 
 ### When entity A wants to trade with entity B, A buys B's coins from B in fiat, B opens a B+A account in his cryptographic bank so that A can sell B coins for fiat from B. A can buy goods from B with B coins that are in his B+A account.
-
-
-![Alt Start](img/1.Start.png "Start")
-
-![Alt Admin](img/2.Admin.png "Admin")
-
-![Alt Create_Customer](img/3.Create_Customer.png "Create Customer")
-
-![Alt Customer](img/4.Customer.png "Customer")
-
-![Alt Wallets](img/5.Wallets.png "Wallets")
-
-![Alt DEX](img/6.DEX.png "DEX")

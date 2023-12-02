@@ -74,9 +74,11 @@ app.get("/:coinname/home",(req,res)=>{
         blockChains[blockchainName].init((valid)=>{
             if(!valid)
                 throw new Error("Blockchain: " + blockchainName +", invalid");
-            next(); 
+            next();
         });
     }
+    else
+        next();
     function next(){
         const ownerAddress = blockChains[blockchainName].getCoinOwnerAddress();
         const coinsInEco = blockChains[blockchainName].coinsInEco();

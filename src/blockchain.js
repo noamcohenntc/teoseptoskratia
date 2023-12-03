@@ -1,6 +1,7 @@
 const sha256 = require("sha256");
 const DB = require("./db");
 const CPU_COST_FACTOR = 100000000;
+const version = "1.0.0";
 
 class Blockchain{
     constructor(name, ownerAddress,namespace) {
@@ -16,8 +17,10 @@ class Blockchain{
     init(cb){
         this.db.loadChain((chain)=>{
             if(!chain) {
+                // Genesis
                 this.createNewBlock(this.zeroNonce, [],
                     {name: this.name,
+                        version:version,
                         address: this.address,
                         namespace:this.namespace
                     },(newBlock)=>{

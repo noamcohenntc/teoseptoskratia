@@ -67,6 +67,16 @@ app.get("/ideology",(req,res)=>{
     res.render("ideology",{ title: req.get('host') });
 })
 
+app.get("/customecss",(req,res)=>{
+    const host = req.get("host")
+    if(host==="localhost:8080" || host==="cryptoteos.com")
+        return res.send(":root {--accent: lightblue;}")
+    if(host==="localhost:8082" || host==="shiricrypto.com")
+        return res.send(":root {--accent: pink;}")
+
+    res.send("");
+})
+
 function getBankAccountsDetails(blockchainName) {
     let accounts = [];
     for (let key in multichain) {

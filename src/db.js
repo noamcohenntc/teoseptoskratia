@@ -39,7 +39,7 @@ class DB{
     deleteDB(){
         const dbPath = process.cwd() + "/DB";
         if(fs.existsSync(dbPath))
-            fs.rmdirSync(dbPath);
+            fs.rmSync(dbPath,{ recursive: true, force: true });
     }
 }
 

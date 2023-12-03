@@ -13,7 +13,7 @@ $("#mine_btn").on("click",()=>{
     },(res)=>{
         $("#coins_in_eco").html(res.coinsInEco);
         $("#coins_in_wallet").html(res.coinsInWallet);
-        $("#time_ms").html(res.nonce.cpu + "µs");
+        $("#time_ms").html(" CPU Time: " + res.nonce.cpu + "µs");
 
         res.accounts.forEach((account)=>{
             let id = account.name.replace("@","-")

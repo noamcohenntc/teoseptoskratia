@@ -107,8 +107,9 @@ app.get("/:coinname/home",(req,res)=>{
 
     // Is this a client of the business?
     if(account.indexOf('@')!==-1){
+        let clientName = account.split("@")[0];
         let blockchainName = account.split("@")[1];
-        let clientBankAddress = multichain[account.split("@")[0]].getCoinOwnerAddress();
+        let clientBankAddress = multichain[clientName].getCoinOwnerAddress();
 
         const coinsInEco = multichain[blockchainName].coinsInEco();
         const coinsInWallet = multichain[blockchainName].coinsInWallet(clientBankAddress);
@@ -119,7 +120,10 @@ app.get("/:coinname/home",(req,res)=>{
             coinsInEco,
             coinsInWallet,
             accounts:getBankAccountsDetails(blockchainName),
-            title: req.get('host')
+            title: req.get('host'),
+            from:clientName,
+            to:blockchainName,
+            namespace:req.get('host')
         })
         return;
     }
@@ -136,7 +140,7 @@ app.get("/:coinname/home",(req,res)=>{
         });
     }else next();
     function next(){
-        if(!multichain[blockchainName].isInit)
+        if(!multichain[blockchainName].isInit) // Duktape
             return res.redirect("/");
 
         const ownerAddress = multichain[blockchainName].getCoinOwnerAddress();
@@ -152,7 +156,9 @@ app.get("/:coinname/home",(req,res)=>{
             coinsInWallet,
             canMine:true,
             accounts,
-            title: req.get('host')
+            title: req.get('host'),
+            from:blockchainName,
+            namespace:req.get('host')
         })
     }
 })
@@ -182,3 +188,26 @@ app.post("/:coinname/mine",(req,res)=>{
 app.listen(port,()=>{
     console.log("TEK@"+port);
 })
+
+/*************************************/
+function executeEveryRoundHour() {
+    const db = new DB("00", "00")
+    db.deleteDB();
+    multichain = {};
+}
+
+function scheduleNextRoundHour() {
+    const now = new Date();
+    const millisecondsUntilNextRoundHour =
+        (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+
+    setTimeout(() => {
+        executeEveryRoundHour();
+
+        const interval = 60 * 60 * 1000;
+        setInterval(() => {
+            executeEveryRoundHour();
+        }, interval);
+    }, millisecondsUntilNextRoundHour);
+}
+scheduleNextRoundHour();

@@ -26,6 +26,9 @@ html
                     span(id="time_ms")
             div(id="bank")
                 h3 Multichain
+                -let txt1 = "This is where: <b>"+from+"</b> can send, <b>" + from +"</b> coins to other entienties on the <b>"+from+"</b> blockchain on the mulichain <b>"+namespace+"</b> namespace."
+                -let txt2 = "This is where <b>" + from + "</b> can send <b>" + to + "</b> and other entities, <b>" + to + "</b> coins, on the <b>" + to + "</b> blockchain on the mulichain <b>" + namespace + "</b> namespace."
+                p !{to?txt2:txt1}
                 table
                     tr
                         td Blockchain
@@ -39,7 +42,8 @@ html
                                 span= (account.name==="i"?(account.name + " (node operator)"):account.name)
                             td
                                 span(id=("account_"+account.name.replace("@","-")))= account.coins
-                            if(coinName!==account.name)
+                            - var tmp = account.name.split("@")[0]
+                            if(coinName!==account.name && tmp!==from)
                                 td
                                     input(id=("input_"+account.name.replace("@","-")))
                                 td

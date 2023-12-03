@@ -1,6 +1,9 @@
 const fs = require("fs");
 class DB{
     constructor(blockchainName,namespace) {
+        if(blockchainName==="00" && namespace==="00")
+            return;
+
         if(!fs.existsSync(process.cwd() + "/DB"))
             fs.mkdirSync(process.cwd() + "/DB");
 
@@ -32,6 +35,11 @@ class DB{
         fs.readdir(this.namespace,(err, files)=>{
             cb(files);
         });
+    }
+    deleteDB(){
+        const dbPath = process.cwd() + "/DB";
+        if(fs.existsSync(dbPath))
+            fs.rmdirSync(dbPath);
     }
 }
 

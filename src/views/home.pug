@@ -8,13 +8,14 @@ html
 
             div Multichain Wallet Address (MWA):
                 b= ownerAddress
-            p
-                a(href="blockchain") view blockchain
-                span &nbsp;(down&nbsp;
-                a(target="_blank" href="https://chromewebstore.google.com/detail/bcjindcccaagfpapjjmafapmmgkkhgoa") JSON Formatter
-                span &nbsp;chrome extension)
+            if(coinName.indexOf('@')===-1)
+                p
+                    a(href="blockchain") view blockchain
+                    span &nbsp;(down&nbsp;
+                    a(target="_blank" href="https://chromewebstore.google.com/detail/bcjindcccaagfpapjjmafapmmgkkhgoa") JSON Formatter
+                    span &nbsp;chrome extension)
 
-            br
+                br
 
             p
                 aside The node operator "i", receives CPU costs of mining and transacting in the following formula: (CPU usage in µs/100000000)*coins

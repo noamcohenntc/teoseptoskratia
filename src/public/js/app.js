@@ -47,7 +47,7 @@ $("#transfer_btn").click(()=>{
     });
     if(transactions.length===0)
         return;
-    
+
     $.jpost("transactions",{transactions}).then((res)=>{
         $("#transfer_cpu").html(" CPU Time: " + res.cpu + "µs")
         res.sums.forEach((sum)=>{

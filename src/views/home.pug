@@ -4,7 +4,7 @@ html
         header
             include includes/title
         main
-            h1= coinName
+            h1(id="coin_name")= coinName
 
             div Multichain Wallet Address (MWA):
                 b= ownerAddress
@@ -47,7 +47,7 @@ html
                             - var tmp = account.name.split("@")[0]
                             if(coinName!==account.name && tmp!==from)
                                 td
-                                    input(id=("input_"+account.name.replace("@","-")))
+                                    input(id=("input_"+account.name.replace("@","-")),class="amount")
                                 td
                                     a(href="/" + account.home + "/home")= "/" + account.home + "/home"
                             else
@@ -56,5 +56,6 @@ html
                     tr
                         td(colspan="4")
                             button(id="transfer_btn") Transfer
+                            span(id="transfer_cpu")
         footer
             include includes/footer

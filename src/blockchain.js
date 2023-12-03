@@ -81,6 +81,7 @@ class Blockchain{
     }
 
     createNewTransactions(transactions,cpuCostAddress,cb){
+
         let start = process.cpuUsage().user;
         let nonce =  this.zeroNonce;
         this.createNewBlock(nonce,transactions,{},(newBlock)=>{
@@ -96,12 +97,11 @@ class Blockchain{
                     amounts.push(transaction.amount);
                 })
                 let cpuCost = (newBlock.nonce.cpu / CPU_COST_FACTOR) * totalAmount;
-                const relativeFees = this.splitTransactionFee(amounts,cpuCost);
 
                 let costTransactions = [];
                 let i=0;
-                tos.forEach((to) => {
-                    costTransactions.push(new Transaction(relativeFees[i],to,cpuCostAddress));
+                tos.forEach((to) => { /*** THE COST SHOULD BE SPLIT RELATIVELY **/
+                    costTransactions.push(new Transaction(cpuCost/tos.length,to,cpuCostAddress));
                     i++;
                 })
                 this.createNewTransactions(costTransactions,null,cb);
@@ -111,18 +111,6 @@ class Blockchain{
 
     }
 
-    splitTransactionFee(transactionAmounts, totalFee) {
-        // Calculate the total transaction amount
-        const totalAmount = transactionAmounts.reduce((sum, amount) => sum + amount, 0);
-
-        // Calculate the fee ratio for each transaction
-        const feeRatios = transactionAmounts.map(amount => amount / totalAmount);
-
-        // Distribute the total fee based on the ratios
-        const distributedFees = feeRatios.map(ratio => Math.round(ratio * totalFee));
-
-        return distributedFees;
-    }
     validate(){
         for(let i=1;i<this.chain.length;i++){
             var block = this.chain[i];

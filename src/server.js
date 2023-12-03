@@ -180,8 +180,42 @@ app.get("/:coinname/blockchain",(req,res)=>{
     res.send(multichain[req.params.coinname].chain);
 })
 app.post("/:coinName/transactions",(req,res)=>{
-    const blockIndex = multichain[req.params.coinName].createNewTransactions(req.body.transactions,multichain[nodeOperator].getCoinOwnerAddress());
-    res.json({blockIndex})
+    let transactions = [];
+    let thisChain = req.params.coinName;
+    if(thisChain.indexOf("@")!==-1)
+        thisChain = thisChain.split("@")[1];
+
+    req.body.transactions.forEach((transaction)=>{
+        const from = multichain[transaction.from].getCoinOwnerAddress();
+        const to = multichain[transaction.to].getCoinOwnerAddress();
+        const amount = parseFloat(transaction.amount);
+        transactions.push({from,to,amount});
+    })
+
+
+    multichain[thisChain].createNewTransactions(transactions,multichain[nodeOperator].getCoinOwnerAddress(),(nonce)=>{
+        const result = {cpu:nonce.cpu,sums:[
+                {
+                    name:req.body.transactions[0].from,
+                    sum:multichain[req.body.transactions[0].from].coinsInWallet()
+                }
+            ]};
+
+        req.body.transactions.forEach((transaction)=> {
+            result.sums.push({
+                name:transaction.to,
+                sum:multichain[thisChain].coinsInWallet(multichain[transaction.to].getCoinOwnerAddress())
+            })
+        });
+
+        result.sums.push({
+            name:"i",
+            sum:multichain[thisChain].coinsInWallet(multichain["i"].getCoinOwnerAddress())
+        })
+
+        res.json(result);
+    });
+
 })
 app.post("/:coinname/mine",(req,res)=>{
     let blockchainName = req.params.coinname;

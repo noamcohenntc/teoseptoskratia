@@ -134,10 +134,11 @@ app.get("/:coinname/home",(req,res)=>{
                 throw new Error("Blockchain: " + blockchainName +", invalid");
             next();
         });
-    }
-    else
-        next();
+    }else next();
     function next(){
+        if(!multichain[blockchainName].isInit)
+            return res.redirect("/");
+
         const ownerAddress = multichain[blockchainName].getCoinOwnerAddress();
         const coinsInEco = multichain[blockchainName].coinsInEco();
         const coinsInWallet = multichain[blockchainName].coinsInWallet();

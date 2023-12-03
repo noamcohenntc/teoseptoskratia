@@ -1,5 +1,6 @@
 const sha256 = require("sha256");
 const DB = require("./db");
+const {isIBMi} = require("nodemon/lib/utils");
 
 class Blockchain{
     constructor(name, ownerAddress,namespace) {
@@ -9,6 +10,7 @@ class Blockchain{
         this.chain = [];
         this.zeroNonce = {nonce: 0,cpu:0};
         this.db = new DB(this.name,namespace);
+        this.isInit = false;
      }
 
     init(cb){
@@ -20,6 +22,7 @@ class Blockchain{
                         namespace:this.namespace
                     },()=>{
                         let valid = this.validate();
+                        this.isInit = valid;
                         cb(valid);
                     });
             } else {
@@ -32,6 +35,7 @@ class Blockchain{
                     this.chain.push(b);
                 })
                 let valid = this.validate();
+                this.isInit = valid;
                 cb(valid);
             }
 

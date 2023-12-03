@@ -1,3 +1,4 @@
+const MULTICHAIN_NAMESPACE = "My Circle"
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
@@ -15,31 +16,30 @@ app.use(express.static('./src/public'))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 
-app.use((req, res, next)=>{
-    const namespace = req.get('host');
+loadMultichainNamespace(()=>{});
+function loadMultichainNamespace(cb) {
+    const namespace = MULTICHAIN_NAMESPACE
 
-    if(nodeOperatorIsNotInitialized())
+    if (nodeOperatorIsNotInitialized())
         loadNodeOperator();
-    else
-        next();
 
     function nodeOperatorIsNotInitialized() {
         return !multichain[nodeOperator];
     }
 
     function loadNodeOperator() {
-        const uuidHashInput = req.protocol + '://' + namespace;
+        const uuidHashInput = 'http://' + namespace +"/i";
         const multichainWalletAddress = uuid5(uuidHashInput, uuid5.URL).split("-").join("");
         multichain[nodeOperator] = new Blockchain(nodeOperator, multichainWalletAddress, namespace);
         multichain[nodeOperator].init(onNodeOperatorLoaded)
     }
 
-    function onNodeOperatorLoaded(isBlockchainValid){
-        if(!isBlockchainValid)
+    function onNodeOperatorLoaded(isBlockchainValid) {
+        if (!isBlockchainValid)
             throw new Error(`Chain ${nodeOperator}, invalid.`);
 
         loadMultichain(() => {
-            next();
+            cb();
         });
     }
 
@@ -50,7 +50,7 @@ app.use((req, res, next)=>{
                 if (name === nodeOperator) return;
 
                 multichain[name] = new Blockchain(name, null, namespace);
-                multichain[name].init((isBlockchainValid)=>{
+                multichain[name].init((isBlockchainValid) => {
                     if (!isBlockchainValid)
                         throw new Error(`Chain ${name}, invalid.`);
 
@@ -59,19 +59,20 @@ app.use((req, res, next)=>{
             cb();
         })
     }
-})
+}
+
 app.get("/",(req,res)=>{
-    res.render('index', { title: req.get('host') })
+    res.render('index', { title: MULTICHAIN_NAMESPACE })
 })
 app.get("/ideology",(req,res)=>{
-    res.render("ideology",{ title: req.get('host') });
+    res.render("ideology",{ title: MULTICHAIN_NAMESPACE });
 })
 
 app.get("/customecss",(req,res)=>{
-    const host = req.get("host")
-    if(host==="localhost:8080" || host==="cryptoteos.com")
+    const host = MULTICHAIN_NAMESPACE
+    if(host==="My Circle")
         return res.send(":root {--accent: lightblue;}")
-    if(host==="localhost:8082" || host==="shiricrypto.com")
+    if(host==="Shiriloo")
         return res.send(":root {--accent: pink;}")
 
     res.send("");
@@ -130,10 +131,10 @@ app.get("/:coinname/home",(req,res)=>{
             coinsInEco,
             coinsInWallet,
             accounts:getBankAccountsDetails(blockchainName),
-            title: req.get('host'),
+            title: MULTICHAIN_NAMESPACE,
             from:clientName,
             to:blockchainName,
-            namespace:req.get('host')
+            namespace:MULTICHAIN_NAMESPACE
         })
         return;
     }
@@ -141,8 +142,8 @@ app.get("/:coinname/home",(req,res)=>{
     // This is the business!
     let blockchainName = account;
     if(!multichain[blockchainName]) {
-        const ownerAddress = uuid5(req.protocol + '://' + req.get('host') + req.originalUrl.split("?")[0], uuid5.URL).split("-").join("");
-        multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,req.get('host'));
+        const ownerAddress = uuid5('http://' + MULTICHAIN_NAMESPACE + "/" +account, uuid5.URL).split("-").join("");
+        multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,MULTICHAIN_NAMESPACE);
         multichain[blockchainName].init((valid)=>{
             if(!valid)
                 throw new Error("Blockchain: " + blockchainName +", invalid");
@@ -166,9 +167,9 @@ app.get("/:coinname/home",(req,res)=>{
             coinsInWallet,
             canMine:true,
             accounts,
-            title: req.get('host'),
+            title: MULTICHAIN_NAMESPACE,
             from:blockchainName,
-            namespace:req.get('host')
+            namespace:MULTICHAIN_NAMESPACE
         })
     }
 })

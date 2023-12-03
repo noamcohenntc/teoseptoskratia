@@ -37,7 +37,8 @@ $("#mine_btn").on("click",()=>{
 })
 
 $("#transfer_btn").click(()=>{
-    const from = $("#coin_name").text().split("@")[0];
+    const from = $("#coin_name").attr("data").split("@")[0];
+
     const transactions = [];
     $(".amount").each((index,e)=>{
         const to = $(e).attr("id").split("input_")[1];

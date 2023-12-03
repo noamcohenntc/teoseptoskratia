@@ -1,6 +1,6 @@
 const sha256 = require("sha256");
 const DB = require("./db");
-const {isIBMi} = require("nodemon/lib/utils");
+const CPU_COST_FACTOR = 100000000;
 
 class Blockchain{
     constructor(name, ownerAddress,namespace) {
@@ -20,7 +20,7 @@ class Blockchain{
                     {name: this.name,
                         address: this.address,
                         namespace:this.namespace
-                    },()=>{
+                    },(newBlock)=>{
                         let valid = this.validate();
                         this.isInit = valid;
                         cb(valid);
@@ -72,33 +72,53 @@ class Blockchain{
 
         this.chain.push(newBlock);
 
-        this.db.saveChain(this.chain,cb);
-        return newBlock;
+        this.db.saveChain(this.chain,()=>{
+            cb(newBlock);
+        });
     }
 
-    createNewTransactions(transactions,cpuCostAddress){
+    createNewTransactions(transactions,cpuCostAddress,cb){
         let start = process.cpuUsage().user;
         let nonce =  this.zeroNonce;
-        let newBlock = this.createNewBlock(nonce,transactions,{},()=>{
+        this.createNewBlock(nonce,transactions,{},(newBlock)=>{
             newBlock.nonce.cpu = process.cpuUsage().user-start;
+
             if(cpuCostAddress) {
                 let totalAmount = 0;
                 let tos = [];
+                const amounts = [];
                 transactions.forEach((transaction) => {
                     totalAmount += transaction.amount;
                     tos.push(transaction.to);
+                    amounts.push(transaction.amount);
                 })
-                let reward = (newBlock.nonce.cpu / 100000000) * totalAmount;
-                let costTransactions = [];
-                tos.forEach((to) => {
-                    costTransactions.push(new Transaction(reward/transactions.length,to,cpuCostAddress));
-                })
-                this.createNewTransactions(costTransactions);
-            }
+                let cpuCost = (newBlock.nonce.cpu / CPU_COST_FACTOR) * totalAmount;
+                const relativeFees = this.splitTransactionFee(amounts,cpuCost);
 
-            return newBlock;
+                let costTransactions = [];
+                let i=0;
+                tos.forEach((to) => {
+                    costTransactions.push(new Transaction(relativeFees[i],to,cpuCostAddress));
+                    i++;
+                })
+                this.createNewTransactions(costTransactions,null,cb);
+            }
+            else cb(newBlock.nonce);
         });
 
+    }
+
+    splitTransactionFee(transactionAmounts, totalFee) {
+        // Calculate the total transaction amount
+        const totalAmount = transactionAmounts.reduce((sum, amount) => sum + amount, 0);
+
+        // Calculate the fee ratio for each transaction
+        const feeRatios = transactionAmounts.map(amount => amount / totalAmount);
+
+        // Distribute the total fee based on the ratios
+        const distributedFees = feeRatios.map(ratio => Math.round(ratio * totalFee));
+
+        return distributedFees;
     }
     validate(){
         for(let i=1;i<this.chain.length;i++){
@@ -138,15 +158,16 @@ class Blockchain{
         return this.chain[0].data.name;
     }
 
-    mine(amount,feeAddress){
+    mine(amount,feeAddress,cb){
         let nonce =  this.proofOfWork();
-        const newBlock = this.createNewBlock(nonce,[new Transaction(amount,"00",this.getCoinOwnerAddress())],{},()=>{});
-        // cpu cost transaction
-        this.createNewTransactions([
-            new Transaction((newBlock.nonce.cpu/100000000)*amount,this.getCoinOwnerAddress(), feeAddress)
-        ]);
-        return newBlock.nonce;
-
+        this.createNewBlock(nonce,[new Transaction(amount,"00",this.getCoinOwnerAddress())],{},(newBlock)=>{
+            // cpu cost transaction
+            this.createNewTransactions([
+                new Transaction((newBlock.nonce.cpu/CPU_COST_FACTOR)*amount,this.getCoinOwnerAddress(), feeAddress)
+            ],null,(nonce)=>{
+                cb(newBlock.nonce);
+            });
+        });
     }
 }
 

@@ -14,9 +14,10 @@ function test1(){
     chain1.init((valid)=>{
         console.assert(valid,"chain1 not valid.")
         if(valid){
-            chain1.mine(100, operator.getCoinOwnerAddress())
-            console.log("test1 passed: mine 100, coinsInEco: ", chain1.coinsInEco());
-            test2();
+            chain1.mine(100, operator.getCoinOwnerAddress(),(nonce)=>{
+                console.log(`overall mined ${chain1.coinsInEco()}`,nonce);
+                test2();
+            })
         }
     })
 }

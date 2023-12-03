@@ -169,13 +169,13 @@ app.post("/:coinName/transactions",(req,res)=>{
 })
 app.post("/:coinname/mine",(req,res)=>{
     let blockchainName = req.params.coinname;
-    let nonce = multichain[blockchainName].mine(parseFloat(req.body.amount),multichain[nodeOperator].getCoinOwnerAddress());
-
-    res.json({
-        nonce,
-        coinsInEco:multichain[blockchainName].coinsInEco(),
-        coinsInWallet:multichain[blockchainName].coinsInWallet(),
-        accounts:getBankAccountsDetails(blockchainName)
+    multichain[blockchainName].mine(parseFloat(req.body.amount),multichain[nodeOperator].getCoinOwnerAddress(),(nonce)=>{
+        res.json({
+            nonce,
+            coinsInEco:multichain[blockchainName].coinsInEco(),
+            coinsInWallet:multichain[blockchainName].coinsInWallet(),
+            accounts:getBankAccountsDetails(blockchainName)
+        });
     });
 })
 

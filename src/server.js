@@ -2,13 +2,10 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const {Blockchain,Transaction} = require("./blockchain");
-const {request} = require("express");
-const { prettyPrintJson } = require('pretty-print-json');
-const {blogger_v2} = require("googleapis");
-const {add} = require("nodemon/lib/rules");
 const DB = require("./db");
-const uuid = require('uuid').v5;
+const uuid5 = require('uuid').v5;
 const port = 8080;
+const nodeOperator = "i";
 let multichain = {};
 
 app.set('views', './src/views')
@@ -18,50 +15,82 @@ app.use(express.static('./src/public'))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 
-app.use((req,res,next)=>{
-    if(!multichain["i"]){
-        const address = uuid(req.protocol + '://' + req.get('host'), uuid.URL).split("-").join("");
-        multichain["i"] = new Blockchain("i",address,req.get('host'));
-        multichain["i"].init((valid)=>{
-            if(!valid)
-                throw new Error("Chain i, invalid.");
+app.use((req, res, next)=>{
+    const namespace = req.get('host');
 
-            let db = new DB(null,req.get('host'));
-            db.getAllChainNames((names)=>{
-                names.forEach((name)=>{
-                    if(name==="i")return;
+    if(nodeOperatorIsNotInitialized())
+        loadNodeOperator();
+    else
+        next();
 
-                    multichain[name] = new Blockchain(name,null,req.get('host'));
-                    multichain[name].init((valid)=>{
-                        if(!valid)
-                            throw new Error(`Chain ${name}, invalid.`);
-                    })
+    function nodeOperatorIsNotInitialized() {
+        return !multichain[nodeOperator];
+    }
+
+    function loadNodeOperator() {
+        const uuidHashInput = req.protocol + '://' + namespace;
+        const multichainWalletAddress = uuid5(uuidHashInput, uuid5.URL).split("-").join("");
+        multichain[nodeOperator] = new Blockchain(nodeOperator, multichainWalletAddress, namespace);
+        multichain[nodeOperator].init(onNodeOperatorLoaded)
+    }
+
+    function onNodeOperatorLoaded(isBlockchainValid){
+        if(!isBlockchainValid)
+            throw new Error(`Chain ${nodeOperator}, invalid.`);
+
+        loadMultichain(() => {
+            next();
+        });
+    }
+
+    function loadMultichain(cb) {
+        let db = new DB(null, namespace);
+        db.getAllChainNames((names) => {
+            names.forEach((name) => {
+                if (name === nodeOperator) return;
+
+                multichain[name] = new Blockchain(name, null, namespace);
+                multichain[name].init((isBlockchainValid)=>{
+                    if (!isBlockchainValid)
+                        throw new Error(`Chain ${name}, invalid.`);
+
                 })
-            })
+            });
+            cb();
         })
     }
-    next();
 })
 app.get("/",(req,res)=>{
-    res.render('index', { title: 'Hey', message: 'Hello there!' })
+    res.render('index', { title: req.get('host') })
+})
+app.get("/ideology",(req,res)=>{
+    res.render("ideology",{ title: req.get('host') });
 })
 
-function getBankAccountsDetails(blockchainName,revers) {
+function getBankAccountsDetails(blockchainName) {
     let accounts = [];
     for (let key in multichain) {
         let blockchain = multichain[key];
         let accountNumber = blockchain.getCoinOwnerAddress();
         let accountName = blockchain.getOwnerName();
         let coinsInBank = multichain[blockchainName].coinsInWallet(accountNumber);
-        //if (accountName !== blockchainName) {
-            accounts.push({
-                home:accountName + "@" + blockchainName,
-                name: accountName,
-                coins: coinsInBank
-            })
-        //}
+
+        accounts.push({
+            home:accountName + "@" + blockchainName,
+            name: accountName,
+            coins: coinsInBank
+        })
     }
     return accounts;
+}
+
+function checkIfBlockchainNameIsValid(account) {
+    return account === nodeOperator ||
+        account === "?" ||
+        account === "" ||
+        account.split('@').length > 2 ||
+        account.indexOf(":") !== -1 ||
+        (account.split('@').length === 2 && (!multichain[account.split("@")[0]] || !multichain[account.split("@")[1]]));
 }
 
 app.get("/:coinname/home",(req,res)=>{
@@ -72,14 +101,9 @@ app.get("/:coinname/home",(req,res)=>{
     else if(req.query.new)
         return res.redirect(req.originalUrl.split("?")[0]);
 
-    if(account==="i" ||
-        account==="?" ||
-        account==="" ||
-        account.split('@').length>2 ||
-        account.indexOf(":")!==-1 ||
-        (account.split('@').length===2 && (!multichain[account.split("@")[0]] || !multichain[account.split("@")[1]]))){
+    if(checkIfBlockchainNameIsValid(account))
         return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\", \":\" or \"?\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage."})
-    }
+
 
     // Is this a client of the business?
     if(account.indexOf('@')!==-1){
@@ -94,7 +118,8 @@ app.get("/:coinname/home",(req,res)=>{
             ownerAddress:clientBankAddress,
             coinsInEco,
             coinsInWallet,
-            accounts:getBankAccountsDetails(blockchainName,true)
+            accounts:getBankAccountsDetails(blockchainName),
+            title: req.get('host')
         })
         return;
     }
@@ -102,7 +127,7 @@ app.get("/:coinname/home",(req,res)=>{
     // This is the business!
     let blockchainName = account;
     if(!multichain[blockchainName]) {
-        const ownerAddress = uuid(req.protocol + '://' + req.get('host') + req.originalUrl.split("?")[0], uuid.URL).split("-").join("");
+        const ownerAddress = uuid5(req.protocol + '://' + req.get('host') + req.originalUrl.split("?")[0], uuid5.URL).split("-").join("");
         multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,req.get('host'));
         multichain[blockchainName].init((valid)=>{
             if(!valid)
@@ -125,7 +150,8 @@ app.get("/:coinname/home",(req,res)=>{
             coinsInEco,
             coinsInWallet,
             canMine:true,
-            accounts
+            accounts,
+            title: req.get('host')
         })
     }
 })
@@ -136,15 +162,13 @@ app.get("/:coinname/home",(req,res)=>{
 app.get("/:coinname/blockchain",(req,res)=>{
     res.send(multichain[req.params.coinname].chain);
 })
-
 app.post("/:coinName/transactions",(req,res)=>{
-    const blockIndex = multichain[req.params.coinName].createNewTransactions(req.body.transactions,multichain["i"].getCoinOwnerAddress());
+    const blockIndex = multichain[req.params.coinName].createNewTransactions(req.body.transactions,multichain[nodeOperator].getCoinOwnerAddress());
     res.json({blockIndex})
 })
-
 app.post("/:coinname/mine",(req,res)=>{
     let blockchainName = req.params.coinname;
-    let nonce = multichain[blockchainName].mine(parseFloat(req.body.amount),multichain["i"].getCoinOwnerAddress());
+    let nonce = multichain[blockchainName].mine(parseFloat(req.body.amount),multichain[nodeOperator].getCoinOwnerAddress());
 
     res.json({
         nonce,

@@ -2,7 +2,7 @@ html
     include includes/head
     body
         header
-            include includes/logo_small
+            include includes/title
         main
             h1= coinName
 
@@ -23,7 +23,6 @@ html
                 div
                     input(id="coins_to_mine", value="100")
                     button(id="mine_btn") Mine
-                    |
                     span(id="time_ms")
             div(id="bank")
                 h3 Multichain
@@ -32,17 +31,22 @@ html
                         td Blockchain
                         td Total
                         td Transfer
-                        td Chainlink
+                        td
                     each account in accounts
+
                         tr
                             td
-                                span= account.name
+                                span= (account.name==="i"?(account.name + " (node operator)"):account.name)
                             td
                                 span(id=("account_"+account.name.replace("@","-")))= account.coins
-                            td
-                                input(id=("input_"+account.name.replace("@","-")))
-                            td
-                                a(href="/" + account.home + "/home")= "/" + account.home + "/home"
+                            if(coinName!==account.name)
+                                td
+                                    input(id=("input_"+account.name.replace("@","-")))
+                                td
+                                    a(href="/" + account.home + "/home")= "/" + account.home + "/home"
+                            else
+                                td
+                                td
                     tr
                         td(colspan="4")
                             button(id="transfer_btn") Transfer

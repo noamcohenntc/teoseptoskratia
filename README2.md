@@ -9,5 +9,3 @@
 ### And because of all this, the true value of the entity to society is represented in its own currency.
 
 ### And the entity can be a virtual entity such as a government or a collective of several concrete entities - human beings.
-
-### When entity A wants to trade with entity B, A buys B's coins from B in fiat, B opens a B+A account in his cryptographic bank so that A can sell B coins for fiat from B. A can buy goods from B with B coins that are in his B+A account.

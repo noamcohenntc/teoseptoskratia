@@ -28,7 +28,7 @@ class DB{
             cb(chain);
         })
     }
-    getAllChainNames(cb){ 
+    getAllChainNames(cb){
         fs.readdir(this.namespace,(err, files)=>{
             cb(files);
         });

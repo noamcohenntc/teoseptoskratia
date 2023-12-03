@@ -7,7 +7,7 @@ class Blockchain{
         this.address = ownerAddress;
         this.namespace = namespace;
         this.chain = [];
-        this.zeroNonce = {nonce: 0,duration:0};
+        this.zeroNonce = {nonce: 0,cpu:0};
         this.db = new DB(this.name,namespace);
      }
 
@@ -18,6 +18,9 @@ class Blockchain{
                     {name: this.name,
                         address: this.address,
                         namespace:this.namespace
+                    },()=>{
+                        let valid = this.validate();
+                        cb(valid);
                     });
             } else {
                 this.name = chain[0].data.name;
@@ -28,9 +31,10 @@ class Blockchain{
                     const b = new Block(this, block.transactions,block.nonce,block.data,block.hash)
                     this.chain.push(b);
                 })
+                let valid = this.validate();
+                cb(valid);
             }
-            let valid = this.validate();
-            cb(valid);
+
         })
     }
     coinsInEco(){
@@ -59,42 +63,38 @@ class Blockchain{
         return coinCnt;
     }
 
-    createNewBlock(nonce,transactions,data){
+    createNewBlock(nonce,transactions,data,cb){
         const newBlock = new Block(this,transactions,nonce,data||{});
 
         this.chain.push(newBlock);
 
-        this.lastBlock = newBlock;
-        this.db.saveChain(this.chain,()=>{});
+        this.db.saveChain(this.chain,cb);
         return newBlock;
     }
 
-    createNewTransactionsWithProof(transactions){
-        let nonce =  this.proofOfWork();
-        return this.createNewBlock(nonce,transactions);
-    }
-    createNewTransactions(transactions,rewardAddress){
+    createNewTransactions(transactions,cpuCostAddress){
         let start = process.cpuUsage().user;
         let nonce =  this.zeroNonce;
-        let newBlock = this.createNewBlock(nonce,transactions);
-        newBlock.nonce.duration = process.cpuUsage().user-start;
+        let newBlock = this.createNewBlock(nonce,transactions,{},()=>{
+            newBlock.nonce.cpu = process.cpuUsage().user-start;
+            if(cpuCostAddress) {
+                let totalAmount = 0;
+                let tos = [];
+                transactions.forEach((transaction) => {
+                    totalAmount += transaction.amount;
+                    tos.push(transaction.to);
+                })
+                let reward = (newBlock.nonce.cpu / 100000000) * totalAmount;
+                let costTransactions = [];
+                tos.forEach((to) => {
+                    costTransactions.push(new Transaction(reward/transactions.length,to,cpuCostAddress));
+                })
+                this.createNewTransactions(costTransactions);
+            }
 
-        if(rewardAddress) {
-            let totalAmount = 0;
-            let tos = [];
-            transactions.forEach((transaction) => {
-                totalAmount += transaction.amount;
-                tos.push(transaction.to);
-            })
-            let reward = (newBlock.nonce.duration / 100000000) * totalAmount;
-            let rewardTransactions = [];
-            tos.forEach((to) => {
-                rewardTransactions.push(new Transaction(reward/transactions.length,to,rewardAddress));
-            })
-            this.createNewTransactions(rewardTransactions);
-        }
+            return newBlock;
+        });
 
-        return newBlock;
     }
     validate(){
         for(let i=1;i<this.chain.length;i++){
@@ -122,8 +122,8 @@ class Blockchain{
             nonce++;
             hash = lastBlock.hashBlock(nonce);
         }
-        const duration = process.cpuUsage().user;
-        return {nonce,duration};
+        const cpu = process.cpuUsage().user;
+        return {nonce,cpu};
     }
 
     getCoinOwnerAddress(){
@@ -135,15 +135,14 @@ class Blockchain{
     }
 
     mine(amount,feeAddress){
-        const newBlock = this.createNewTransactionsWithProof([
-            new Transaction(amount,"00",this.getCoinOwnerAddress())
-        ]);
-
-        // fee transaction
+        let nonce =  this.proofOfWork();
+        const newBlock = this.createNewBlock(nonce,[new Transaction(amount,"00",this.getCoinOwnerAddress())],{},()=>{});
+        // cpu cost transaction
         this.createNewTransactions([
-            new Transaction((newBlock.nonce.duration/100000000)*amount,this.getCoinOwnerAddress(), feeAddress)
+            new Transaction((newBlock.nonce.cpu/100000000)*amount,this.getCoinOwnerAddress(), feeAddress)
         ]);
         return newBlock.nonce;
+
     }
 }
 
@@ -168,7 +167,6 @@ class Block{
     hashBlock(nonce){
         return sha256(JSON.stringify(nonce||this.nonce) + JSON.stringify(this));
     }
-
     validate(){
         /*
         You have to remove the hash before re-hashing

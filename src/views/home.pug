@@ -1,5 +1,6 @@
 html
     include includes/head
+    - var blockchainName = (coinName.indexOf('@')===-1?coinName:coinName.split("@")[1]);
     body
         header
             include includes/title
@@ -9,19 +10,20 @@ html
 
             div Multichain Address (MA):
                 b= ownerAddress
-            if(coinName.indexOf('@')===-1)
-                p
-                    a(href="blockchain") view blockchain
-                    span &nbsp;(down&nbsp;
-                    a(target="_blank" href="https://chromewebstore.google.com/detail/bcjindcccaagfpapjjmafapmmgkkhgoa") JSON Formatter
-                    span &nbsp;chrome extension)
+            p
+                a(href="/"+blockchainName+"/blockchain")= "view "+blockchainName+" blockchain"
+                span &nbsp;(download&nbsp;
+                a(target="_blank" href="https://chromewebstore.google.com/detail/bcjindcccaagfpapjjmafapmmgkkhgoa") JSON Formatter
+                span &nbsp;chrome extension)
 
-                br
+            br
 
             p
                 aside The node operator "i", receives CPU costs of mining and transacting in the following formula: (CPU usage in µs/100000000)*coins. The nonce on this blockchain is composed of two parts: The nonce and the cpu, this adds an extra layer of security and immutability since the nonce/cpu is linked to the transaction amount.
-                span Total Coins Mined:&nbsp
-                span(id="coins_in_eco")= coinsInEco
+                h4
+                    span Total Coins Mined:&nbsp
+                    span(id="coins_in_eco")= coinsInEco
+                    div= "on the " + blockchainName + " blockchain"
 
             if canMine
                 div
@@ -33,6 +35,7 @@ html
                 -let txt1 = "This is where: <b>"+from+"</b> can send, <b>" + from +"</b> coins to other entienties on the <b>"+from+"</b> blockchain on the mulichain <b>"+namespace+"</b> namespace."
                 -let txt2 = "This is where <b>" + from + "</b> can send <b>" + to + "</b> and other entities, <b>" + to + "</b> coins, on the <b>" + to + "</b> blockchain on the mulichain <b>" + namespace + "</b> namespace."
                 p !{to?txt2:txt1}
+                a(href="#",onclick="history.back();") back
                 table
                     tr
                         td Blockchain

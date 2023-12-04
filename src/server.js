@@ -210,8 +210,8 @@ app.post("/:coinName/transactions",(req,res)=>{
         });
 
         result.sums.push({
-            name:"i",
-            sum:multichain[thisChain].coinsInWallet(multichain["i"].getCoinOwnerAddress())
+            name:nodeOperator,
+            sum:multichain[thisChain].coinsInWallet(multichain[nodeOperator].getCoinOwnerAddress())
         })
 
         res.json(result);

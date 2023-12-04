@@ -5,7 +5,9 @@
   "main": "src/server.js",
   "scripts": {
     "test": "node src/test.js",
-    "start": "nodemon --watch src -e js src/server.js"
+    "node_1": "nodemon --watch src -e js src/server.js \"Our Circle\" 8080",
+    "node_2": "nodemon --watch src -e js src/server.js \"Itay's Circle\" 8081",
+    "node_3": "nodemon --watch src -e js src/server.js \"Shiriloo's Circle\" 8082"
   },
   "author": "Noam-Tal Cohen",
   "license": "MIT",

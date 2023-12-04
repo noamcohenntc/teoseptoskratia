@@ -6,7 +6,8 @@ html
             include includes/title
         main
             h1(id="coin_name",data=coinName)= coinName
-                small &nbsp;&nbsp;(blockchain)
+                - const html = "("+((coinName.indexOf('@')===-1)?"":(coinName.split("@")[0] +" on the " +coinName.split("@")[1] ))+" blockchain)"
+                small #{html}
 
             div Multichain Address (MA):
                 b= ownerAddress

@@ -70,9 +70,9 @@ app.get("/ideology",(req,res)=>{
 
 app.get("/customecss",(req,res)=>{
     const host = MULTICHAIN_NAMESPACE
-    if(host==="My Circle")
+    if(host==="Our Circle")
         return res.send(":root {--accent: lightblue;}")
-    if(host==="Shiriloo")
+    if(host==="Shiriloo's Circle")
         return res.send(":root {--accent: pink;}")
 
     res.send("");

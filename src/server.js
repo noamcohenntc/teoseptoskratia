@@ -102,9 +102,10 @@ function checkIfBlockchainNameIsValid(account) {
     return account === nodeOperator || account === MULTICHAIN_NAMESPACE ||
         account === "?" ||
         account === "" ||
-        account.split('@').length > 2 ||
+        account.indexOf("@") !== -1 ||
         account.indexOf(":") !== -1 ||
-        (account.split('@').length === 2 && (!multichain[account.split("@")[0]] || !multichain[account.split("@")[1]]));
+        account.indexOf(">") !== -1 ||
+        account.indexOf("<") !== -1;
 }
 
 app.get("/:coinname/home",(req,res)=>{

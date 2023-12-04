@@ -11,7 +11,7 @@ $.extend({
 });
 
 $("#create_coin_btn").on("click",()=>{
-    if($("#coin_name").val() !== "")
+    if($("#coin_name").val() !== "" && $("#coin_name").val()!=="?")
         document.location = "/" + $("#coin_name").val() + "/home?new=true";
 });
 $("#login").on("click",()=>{

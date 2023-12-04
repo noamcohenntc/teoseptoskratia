@@ -1,4 +1,7 @@
 const MULTICHAIN_NAMESPACE = process.argv[2] || "My Circle"
+if(MULTICHAIN_NAMESPACE.indexOf("@")!==-1)
+    throw new Error("Namespace can't contain '@'.");
+
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
@@ -242,6 +245,7 @@ function executeEveryRoundHour() {
     const db = new DB("00", "00")
     db.deleteDB();
     multichain = {};
+    loadMultichainNamespace(()=>{});
 }
 
 function scheduleNextRoundHour() {

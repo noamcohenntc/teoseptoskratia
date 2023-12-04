@@ -41,6 +41,7 @@ class DB{
         const dbPath = process.cwd() + db;
         if(fs.existsSync(dbPath))
             fs.rmSync(dbPath,{ recursive: true, force: true });
+        fs.mkdir(process.cwd() + db,(err)=>{});
     }
 }
 

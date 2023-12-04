@@ -1,6 +1,6 @@
 const MULTICHAIN_NAMESPACE = process.argv[2] || "My Circle"
-if(MULTICHAIN_NAMESPACE.indexOf("@")!==-1)
-    throw new Error("Namespace can't contain '@'.");
+if(MULTICHAIN_NAMESPACE.indexOf(">")!==-1)
+    throw new Error("Namespace can't contain '>'");
 
 const express = require("express");
 const app = express();
@@ -74,9 +74,9 @@ app.get("/ideology",(req,res)=>{
 app.get("/customecss",(req,res)=>{
     const host = MULTICHAIN_NAMESPACE
     if(host==="Our Circle")
-        return res.send(":root {--accent: lightblue;}")
+        return res.send(":root {--bg:white;--text:black;--text-light:#242424;--accent-bg:#fafafa}")
     if(host==="Shiriloo's Circle")
-        return res.send(":root {--accent: pink;}")
+        return res.send(":root {--accent:blue;--bg:lightpink;--text:black;--text-light:#242424;--accent-bg:pink}}")
 
     res.send("");
 })
@@ -90,7 +90,7 @@ function getBankAccountsDetails(blockchainName) {
         let coinsInBank = multichain[blockchainName].coinsInWallet(accountNumber);
 
         accounts.push({
-            home:accountName + "@" + blockchainName,
+            home:accountName + "/" + blockchainName,
             name: accountName,
             coins: coinsInBank
         })
@@ -118,34 +118,10 @@ app.get("/:coinname/home",(req,res)=>{
     if(checkIfBlockchainNameIsValid(account))
         return res.render("error",{title:MULTICHAIN_NAMESPACE,error:"Invalid blockchain name",description:"Blockchain name cannot contain \"@\", \":\" or \"?\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage. In addition the blockchain name can't be equal to the namespace."})
 
-
-    // Is this a client of the business?
-    if(account.indexOf('@')!==-1){
-        let clientName = account.split("@")[0];
-        let blockchainName = account.split("@")[1];
-        let clientBankAddress = multichain[clientName].getCoinOwnerAddress();
-
-        const coinsInEco = multichain[blockchainName].coinsInEco();
-        const coinsInWallet = multichain[blockchainName].coinsInWallet(clientBankAddress);
-
-        res.render("home", {
-            coinName:account,
-            ownerAddress:clientBankAddress,
-            coinsInEco,
-            coinsInWallet,
-            accounts:getBankAccountsDetails(blockchainName),
-            title: MULTICHAIN_NAMESPACE,
-            from:clientName,
-            to:blockchainName,
-            namespace:MULTICHAIN_NAMESPACE
-        })
-        return;
-    }
-
-    // This is the business!
     let blockchainName = account;
+
     if(!multichain[blockchainName]) {
-        const ownerAddress = uuid5('http://' + MULTICHAIN_NAMESPACE + "/" +account, uuid5.URL).split("-").join("");
+        const ownerAddress = uuid5('http://' + MULTICHAIN_NAMESPACE + "/" +blockchainName, uuid5.URL).split("-").join("");
         multichain[blockchainName] = new Blockchain(blockchainName, ownerAddress,MULTICHAIN_NAMESPACE);
         multichain[blockchainName].init((valid)=>{
             if(!valid)
@@ -154,9 +130,6 @@ app.get("/:coinname/home",(req,res)=>{
         });
     }else next();
     function next(){
-        if(!multichain[blockchainName].isInit) // Duktape
-            return res.redirect("/");
-
         const ownerAddress = multichain[blockchainName].getCoinOwnerAddress();
         const coinsInEco = multichain[blockchainName].coinsInEco();
         const coinsInWallet = multichain[blockchainName].coinsInWallet();
@@ -176,56 +149,58 @@ app.get("/:coinname/home",(req,res)=>{
         })
     }
 })
+app.get("/:from/:blockchain/partner",(req,res)=>{
+    let clientName = req.params.from
+
+    let blockchainName = req.params.blockchain;
+
+    let clientBankAddress = multichain[clientName].getCoinOwnerAddress();
+
+    const coinsInEco = multichain[blockchainName].coinsInEco();
+    const coinsInWallet = multichain[blockchainName].coinsInWallet(clientBankAddress);
+
+    res.render("partner", {
+        coinName:blockchainName,
+        ownerAddress:clientBankAddress,
+        coinsInEco,
+        coinsInWallet,
+        accounts:getBankAccountsDetails(blockchainName),
+        title: MULTICHAIN_NAMESPACE,
+        from:clientName,
+        to:blockchainName,
+        namespace:MULTICHAIN_NAMESPACE
+    })
+})
 
 /*******/
 /* API */
 /*******/
 app.get("/:coinname/blockchain",(req,res)=>{
-    res.send(multichain[req.params.coinname].chain);
+    let blockchainName = req.params.coinname
+
+    res.send(multichain[blockchainName].chain);
 })
-app.post("/:coinName/transactions",(req,res)=>{
+app.post("/transactions",(req,res)=>{
     let transactions = [];
-    let thisChain = req.params.coinName;
-    let isFromOwner = true
-    if(thisChain.indexOf("@")!==-1) {
-        isFromOwner = false
-        thisChain = thisChain.split("@")[1];
-    }
 
     req.body.transactions.forEach((transaction)=>{
         const from = multichain[transaction.from].getCoinOwnerAddress();
         const to = multichain[transaction.to].getCoinOwnerAddress();
         const amount = parseFloat(transaction.amount);
         transactions.push({from,to,amount});
-    })
+    });
 
+    multichain[req.query.blockchain].createNewTransactions(transactions,multichain[nodeOperator].getCoinOwnerAddress(),(nonce)=>{
+        const result = {cpu:nonce.cpu};
 
-    multichain[thisChain].createNewTransactions(transactions,multichain[nodeOperator].getCoinOwnerAddress(),(nonce)=>{
-        const result = {cpu:nonce.cpu,sums:[
-                {
-                    name:req.body.transactions[0].from,
-                    sum:multichain[thisChain].coinsInWallet(multichain[req.body.transactions[0].from].getCoinOwnerAddress())
-                }
-            ]};
-
-        req.body.transactions.forEach((transaction)=> {
-            result.sums.push({
-                name:transaction.to,
-                sum:multichain[thisChain].coinsInWallet(multichain[transaction.to].getCoinOwnerAddress())
-            })
-        });
-
-        result.sums.push({
-            name:nodeOperator,
-            sum:multichain[thisChain].coinsInWallet(multichain[nodeOperator].getCoinOwnerAddress())
-        })
-
+        result.accounts = getBankAccountsDetails(req.query.blockchain);
         res.json(result);
     });
 
 })
 app.post("/:coinname/mine",(req,res)=>{
     let blockchainName = req.params.coinname;
+
     multichain[blockchainName].mine(parseFloat(req.body.amount),multichain[nodeOperator].getCoinOwnerAddress(),(nonce)=>{
         res.json({
             nonce,
@@ -240,6 +215,8 @@ app.listen(port,()=>{
     console.log("TEK@"+port);
 })
 
+/*************************************/
+/* Auto-deleted every hour
 /*************************************/
 function executeEveryRoundHour() {
     const db = new DB("00", "00")

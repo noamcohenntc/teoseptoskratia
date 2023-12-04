@@ -1,11 +1,16 @@
 html
     include includes/head
     - var blockchainName = (coinName.indexOf('@')===-1?coinName:coinName.split("@")[1]);
-    body
+    body(data-from=coinName)
         header
             include includes/title
         main
-            h1(id="coin_name",data=coinName)= coinName
+            p
+                -let txt1 = "This is where <b>" + from + "</b> can send, <b>" + from + "</b> coins to other entienties on the <b>" + from + "</b> blockchain in the mulichain <b>" + namespace + "</b> namespace."
+                -let txt2 = "This is where <b>" + from + "</b> can send <b>" + to + "</b> and other entities, <b>" + to + "</b> coins, on the <b>" + to + "</b> blockchain in the mulichain <b>" + namespace + "</b> namespace."
+                p !{to?txt2:txt1}
+                a(href="#",onclick="history.back();") back
+            h1(id="coin_name",data=from)= coinName
                 - const html = "("+((coinName.indexOf('@')===-1)?"":(coinName.split("@")[0] +" on the " +coinName.split("@")[1] ))+" blockchain)"
                 small #{html}
 
@@ -29,39 +34,35 @@ html
             if canMine
                 div
                     input(id="coins_to_mine", value="100")
-                    button(id="mine_btn") Mine
+                    button(id="mine_btn",data-foreign=foreign) Mine
                     span(id="time_ms")
             div(id="bank")
                 h3 Multichain
-                -let txt1 = "This is where <b>"+from+"</b> can send, <b>" + from +"</b> coins to other entienties on the <b>"+from+"</b> blockchain in the mulichain <b>"+namespace+"</b> namespace."
-                -let txt2 = "This is where <b>" + from + "</b> can send <b>" + to + "</b> and other entities, <b>" + to + "</b> coins, on the <b>" + to + "</b> blockchain in the mulichain <b>" + namespace + "</b> namespace."
-                p !{to?txt2:txt1}
-                a(href="#",onclick="history.back();") back
                 table
                     tr
                         td Blockchain
                         td Total
                         td Transfer
-                        td
+                        td Partner Link
                     each account in accounts
 
                         tr
                             td
                                 span= (account.name==="i"?(account.name + " (node operator)"):account.name)
                             td
-                                span(id=("account_"+account.name.replace("@","-")))= account.coins
+                                span(id=("account_"+account.name.replace(">","-")))= account.coins
                             - var tmp = account.name.split("@")[0]
                             if(coinName!==account.name && tmp!==from)
                                 td
-                                    input(id=("input_"+account.name.replace("@","-")),class="amount")
+                                    input(id=("input_"+account.name.replace(">","-")),class="amount")
                                 td
-                                    a(href="/" + account.home + "/home")= "/" + account.home + "/home"
+                                    a(href="/" + account.home + "/partner")= "/" + account.home + "/partner"
                             else
                                 td
                                 td
                     tr
                         td(colspan="4")
-                            button(id="transfer_btn") Transfer
+                            button(id="transfer_btn",data-foreign=foreign) Transfer
                             span(id="transfer_cpu")
         footer
             include includes/footer

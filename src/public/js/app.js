@@ -20,25 +20,33 @@ $("#login").on("click",()=>{
 });
 
 $("#mine_btn").on("click",()=>{
-    $.post("mine",{
+    let foriegn = $("#mine_btn").attr("data-foreign");
+    let url = "mine";
+    if(foriegn)
+        url = url + "?foreign=" + foriegn;
+
+    $.post(url,{
         amount:parseFloat($("#coins_to_mine").val())
     },(res)=>{
         $("#coins_in_eco").html(res.coinsInEco);
         $("#coins_in_wallet").html(res.coinsInWallet);
         $("#time_ms").html(" CPU Time: " + res.nonce.cpu + "µs");
 
-        res.accounts.forEach((account)=>{
-            let id = account.name.replace("@","-")
-            if($("#bank #account_" + id).length===0)
-                return;//$("#bank").append('<div id="account_'+id+'"></div>')
-            $("#bank #account_" + id).html(account.coins);
-        })
+        updateAccounts(res.accounts);
     })
 })
 
-$("#transfer_btn").click(()=>{
-    const from = $("#coin_name").attr("data").split("@")[0];
+function updateAccounts(accounts){
+    console.log(accounts);
+    accounts.forEach((account)=>{
+        let id = "#account_" + account.name.replace(">","-");
+        $(id).html(account.coins);
+    })
+}
 
+$("#transfer_btn").click(()=>{
+    let from = $("body").attr("data-from");
+    let blockChainName = $("body").attr("data-to");
     const transactions = [];
     $(".amount").each((index,e)=>{
         const to = $(e).attr("id").split("input_")[1];
@@ -49,10 +57,9 @@ $("#transfer_btn").click(()=>{
     if(transactions.length===0)
         return;
 
-    $.jpost("transactions",{transactions}).then((res)=>{
+    let url = "/transactions?blockchain=" + (blockChainName?blockChainName:from)
+    $.jpost(url,{transactions}).then((res)=>{
         $("#transfer_cpu").html(" CPU Time: " + res.cpu + "µs")
-        res.sums.forEach((sum)=>{
-            $("#account_" + sum.name).html(sum.sum);
-        })
+        updateAccounts((res.accounts));
     })
 })

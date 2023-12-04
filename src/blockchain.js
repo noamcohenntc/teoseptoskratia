@@ -19,7 +19,8 @@ class Blockchain{
             if(!chain) {
                 // Genesis
                 this.createNewBlock(this.zeroNonce, [],
-                    {name: this.name,
+                    {"block-type":"genesis",
+                        name: this.name,
                         version:version,
                         address: this.address,
                         namespace:this.namespace

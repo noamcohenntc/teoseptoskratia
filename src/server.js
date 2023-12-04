@@ -183,8 +183,11 @@ app.get("/:coinname/blockchain",(req,res)=>{
 app.post("/:coinName/transactions",(req,res)=>{
     let transactions = [];
     let thisChain = req.params.coinName;
-    if(thisChain.indexOf("@")!==-1)
+    let isFromOwner = true
+    if(thisChain.indexOf("@")!==-1) {
+        isFromOwner = false
         thisChain = thisChain.split("@")[1];
+    }
 
     req.body.transactions.forEach((transaction)=>{
         const from = multichain[transaction.from].getCoinOwnerAddress();
@@ -198,7 +201,7 @@ app.post("/:coinName/transactions",(req,res)=>{
         const result = {cpu:nonce.cpu,sums:[
                 {
                     name:req.body.transactions[0].from,
-                    sum:multichain[req.body.transactions[0].from].coinsInWallet()
+                    sum:multichain[thisChain].coinsInWallet(multichain[req.body.transactions[0].from].getCoinOwnerAddress())
                 }
             ]};
 

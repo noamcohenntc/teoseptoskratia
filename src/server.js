@@ -76,7 +76,7 @@ app.get("/customecss",(req,res)=>{
     if(host==="Our Circle")
         return res.send(":root {--bg:white;--text:black;--text-light:#242424;--accent-bg:#fafafa}")
     if(host==="Shiriloo's Circle")
-        return res.send(":root {--accent:blue;--bg:lightpink;--text:black;--text-light:#242424;--accent-bg:pink}}")
+        return res.send(":root {--accent:purple;--bg:lightpink;--text:black;--text-light:#242424;--accent-bg:pink}}")
 
     res.send("");
 })

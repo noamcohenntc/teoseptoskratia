@@ -1,11 +1,11 @@
-const MULTICHAIN_NAMESPACE = "My Circle"
+const MULTICHAIN_NAMESPACE = process.argv[2] || "My Circle"
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const {Blockchain,Transaction} = require("./blockchain");
 const DB = require("./db");
 const uuid5 = require('uuid').v5;
-const port = 8080;
+const port = process.argv[3] || 8080;
 const nodeOperator = "i";
 let multichain = {};
 
@@ -96,7 +96,7 @@ function getBankAccountsDetails(blockchainName) {
 }
 
 function checkIfBlockchainNameIsValid(account) {
-    return account === nodeOperator ||
+    return account === nodeOperator || account === MULTICHAIN_NAMESPACE ||
         account === "?" ||
         account === "" ||
         account.split('@').length > 2 ||
@@ -108,12 +108,12 @@ app.get("/:coinname/home",(req,res)=>{
     let account = req.params.coinname;
 
     if(req.query.new && multichain[account])
-        return res.render("error",{error:"This blockchain name is already taken."})
+        return res.render("error",{title:MULTICHAIN_NAMESPACE,error:"This blockchain name is already taken."})
     else if(req.query.new)
         return res.redirect(req.originalUrl.split("?")[0]);
 
     if(checkIfBlockchainNameIsValid(account))
-        return res.render("error",{error:"Invalid Name",description:"Name cannot contain \"@\", \":\" or \"?\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage."})
+        return res.render("error",{title:MULTICHAIN_NAMESPACE,error:"Invalid blockchain name",description:"Blockchain name cannot contain \"@\", \":\" or \"?\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage. In addition the blockchain name can't be equal to the namespace."})
 
 
     // Is this a client of the business?

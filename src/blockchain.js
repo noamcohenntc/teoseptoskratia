@@ -21,9 +21,10 @@ class Blockchain{
                 this.createNewBlock(this.zeroNonce, [],
                     {"block-type":"genesis",
                         name: this.name,
+                        namespace:this.namespace,
                         version:version,
                         address: this.address,
-                        namespace:this.namespace
+                        "cpu-factor":CPU_COST_FACTOR
                     },(newBlock)=>{
                         let valid = this.validate();
                         this.isInit = valid;

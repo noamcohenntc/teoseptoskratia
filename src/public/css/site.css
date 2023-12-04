@@ -7,3 +7,6 @@ small{
 #subtitle_div{
     font-size: 0.5em;
 }
+input{
+    width:100px;
+}

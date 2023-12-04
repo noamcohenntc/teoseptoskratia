@@ -26,40 +26,36 @@ html
             span &nbsp;chrome extension)
 
             p
-                aside The node operator "i", receives CPU costs of mining and transacting in the following formula: (CPU usage in µs/100000000)*coins. The nonce on this blockchain is composed of two parts: The nonce and the cpu, this adds an extra layer of security and immutability since the nonce/cpu is linked to the transaction amount.
+                aside The node operator "i", receives CPU costs of mining and transacting in the following formula: (CPU usage in µs/100000000)*coins. The nonce on this blockchain is composed of two parts: The nonce and the cpu, this adds an extra layer of security and immutability since the nonce/cpu is linked to the transaction amount and it's much harder to re-hash the blockchain.
                 h4
                     span Total Coins Mined:&nbsp
                     span(id="coins_in_eco")= coinsInEco
                     div= "on the " + blockchainName + " blockchain"
 
-            if canMine
-                div
-                    input(id="coins_to_mine", value="100")
-                    button(id="mine_btn",data-foreign=foreign) Mine
-                    span(id="time_ms")
-            div(id="bank")
-                h3 Multichain
-
-                table
-                    tr
-                        td Blockchain
-                        td Total
-                        td Transfer
-                    each account in accounts
+                div(id="bank")
+                    table
                         tr
-                            td
-                                span= (account.name==="i"?(account.name + " (node operator)"):account.name)
-                            td
-                                span(id=("account_"+account.name.replace(">","-")))= account.coins
-                            - var tmp = account.name.split("@")[0]
-                            if(from!==account.name)
+                            td(colspan="3")
+                                h5 Multichain
+                        tr
+                            td Blockchain
+                            td Total
+                            td Transfer
+                        each account in accounts
+                            tr
                                 td
-                                    input(id=("input_"+account.name.replace(">","-")),class="amount")
-                            else
+                                    span= (account.name==="i"?(account.name + " (node operator)"):account.name)
                                 td
-                    tr
-                        td(colspan="4")
-                            button(id="transfer_btn",data-foreign=foreign) Transfer
-                            span(id="transfer_cpu")
+                                    span(id=("account_"+account.name.replace(">","-")))= account.coins
+                                - var tmp = account.name.split("@")[0]
+                                if(from!==account.name)
+                                    td
+                                        input(id=("input_"+account.name.replace(">","-")),class="amount")
+                                else
+                                    td
+                        tr
+                            td(colspan="4")
+                                button(id="transfer_btn",data-foreign=foreign) Transfer
+                                span(id="transfer_cpu")
         footer
             include includes/footer

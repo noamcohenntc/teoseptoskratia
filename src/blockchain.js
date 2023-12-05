@@ -187,10 +187,18 @@ class Block{
     }
     validate(){
         /*
+        I believe this is where I failed to understand Sitoshi and the nonce.
+
+        Also need to implement validation according to CPU usage
+        and transaction amounts since the fee is calculated according
+        to CPU usage, it should be quite easy to add this layer of
+        security by re-calculating the fee in the transactions.
+
         You have to remove the hash before re-hashing
-        since when the block is created it is hash without a hash
+        since when the block is created it is hashed without a hash
         which is assigned after the hashing.
          */
+
         let temp = this.hash;
         this.hash = "";
         let isValid = this.hashBlock()===temp;

@@ -10,3 +10,7 @@ small{
 input{
     width:100px;
 }
+#coins_list div{
+    float: left;
+    padding: 10px;
+}

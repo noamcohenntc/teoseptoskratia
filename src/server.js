@@ -77,6 +77,8 @@ app.get("/customecss",(req,res)=>{
         return res.send(":root {--bg:white;--text:black;--text-light:#242424;--accent-bg:#fafafa}")
     if(host==="Shiriloo's Circle")
         return res.send(":root {--accent:purple;--bg:lightpink;--text:black;--text-light:#242424;--accent-bg:pink}}")
+    if(host==="Itay's Circle")
+        return res.send(":root {--accent:yellow;--bg:black;--text:white;--text-light:#242424;--accent-bg:#555}}")
 
     res.send("");
 })
@@ -100,12 +102,8 @@ function getBankAccountsDetails(blockchainName) {
 
 function checkIfBlockchainNameIsValid(account) {
     return account === nodeOperator || account === MULTICHAIN_NAMESPACE ||
-        account === "?" ||
-        account === "" ||
-        account.indexOf("@") !== -1 ||
-        account.indexOf(":") !== -1 ||
-        account.indexOf(">") !== -1 ||
-        account.indexOf("<") !== -1;
+        !/^[A-Za-z0-9]*$/.test(account) ||
+        account === "";
 }
 
 app.get("/:coinname/home",(req,res)=>{

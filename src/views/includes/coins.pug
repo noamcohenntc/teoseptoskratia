@@ -1,0 +1,6 @@
+div(id="coins_list")
+    h5 All Coins in Multichain:
+    each account in accounts
+        div
+            a(href="/"+account.name +"/home")= account.name
+div(style="clear:both")

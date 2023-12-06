@@ -13,10 +13,10 @@ class DB{
         this.path = this.namespace;
         if(blockchainName) {
             if (!fs.existsSync(this.path))
-                fs.mkdirSync(this.path);
+                fs.mkdir(this.path,()=>{});
             this.path = this.path + "/" + blockchainName;
             if (!fs.existsSync(this.path))
-                fs.mkdirSync(this.path);
+                fs.mkdir(this.path,()=>{}); 
             this.path = this.path + "/blockchain.json";
         }
     }

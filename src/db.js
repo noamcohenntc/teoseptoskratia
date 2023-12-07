@@ -11,12 +11,14 @@ class DB{
         namespace = namespace.replace(":","");
         this.namespace = process.cwd() + db + "/"+namespace;
         this.path = this.namespace;
+
         if(blockchainName) {
             if (!fs.existsSync(this.path))
-                fs.mkdir(this.path,()=>{});
+                try{fs.mkdirSync(this.path);}catch{}
+
             this.path = this.path + "/" + blockchainName;
             if (!fs.existsSync(this.path))
-                fs.mkdir(this.path,()=>{}); 
+                try{fs.mkdirSync(this.path);}catch{}
             this.path = this.path + "/blockchain.json";
         }
     }
@@ -40,8 +42,8 @@ class DB{
     deleteDB(){
         const dbPath = process.cwd() + db;
         if(fs.existsSync(dbPath))
-            fs.rmSync(dbPath,{ recursive: true, force: true });
-        fs.mkdir(process.cwd() + db,(err)=>{});
+            try{fs.rmSync(dbPath,{ recursive: true, force: true });}catch{}
+        try{fs.mkdirSync(process.cwd() + db,(err)=>{});}catch{}
     }
 }
 

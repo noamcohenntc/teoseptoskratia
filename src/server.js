@@ -9,7 +9,7 @@ const {Blockchain,Transaction} = require("./blockchain");
 const DB = require("./db");
 const uuid5 = require('uuid').v5;
 const port = process.argv[3] || 8080;
-const nodeOperator = "i";
+const nodeOperator = "o";
 let multichain = {};
 
 app.set('views', './src/views')
@@ -115,7 +115,7 @@ app.get("/:coinname/home",(req,res)=>{
         return res.redirect(req.originalUrl.split("?")[0]);
 
     if(checkIfBlockchainNameIsValid(account))
-        return res.render("error",{title:MULTICHAIN_NAMESPACE,error:"Invalid blockchain name",description:"Blockchain name cannot contain \"@\", \":\" or \"?\". Also \"i\" is an internal blockchain that collects mining & transaction cost due to CPU usage. In addition the blockchain name can't be equal to the namespace."})
+        return res.render("error",{title:MULTICHAIN_NAMESPACE,error:"Invalid blockchain name",description:"Blockchain name cannot contain \"@\", \":\" or \"?\". Also \"o\" is an internal blockchain that collects mining & transaction cost due to CPU usage. In addition the blockchain name can't be equal to the namespace."})
 
     let blockchainName = account;
 

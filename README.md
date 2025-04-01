@@ -1,3 +1,6 @@
+## Repo has moved to:
+(dRBreslove)[https://github.com/dRBreslove/teoseptoskratia]
+
 # TEK
 ```
 npm install
